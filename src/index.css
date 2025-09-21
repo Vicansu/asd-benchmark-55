@@ -2,95 +2,152 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* PISA Assessment Platform Design System - Material Design Inspired
+All colors MUST be HSL following Material Design principles.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Material Design Surface Colors */
+    --background: 0 0% 98%;
+    --foreground: 210 11% 15%;
+    --surface: 0 0% 100%;
+    --surface-variant: 220 14% 96%;
 
+    /* Card System with Material Elevation */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 11% 15%;
+    --card-elevated: 0 0% 100%;
 
+    /* Popover & Modal Surfaces */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 11% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* PISA Brand Colors - Material Blue Primary */
+    --primary: 207 90% 54%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 207 90% 48%;
+    --primary-light: 207 90% 84%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Assessment Orange - Material Orange */
+    --secondary: 24 100% 58%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 24 100% 52%;
+    --secondary-light: 24 100% 88%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Neutral Tones */
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+    --muted-hover: 220 14% 93%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent Colors */
+    --accent: 207 90% 96%;
+    --accent-foreground: 207 90% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Input & Border System */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --input-focus: 207 90% 54%;
+    --ring: 207 90% 54%;
 
+    /* Material Design Border Radius */
     --radius: 0.5rem;
+    --radius-sm: 0.25rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Material Design Shadows & Elevation */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1), 0 8px 10px -6px hsl(0 0% 0% / 0.1);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Assessment Interface Specific */
+    --assessment-panel: 0 0% 100%;
+    --assessment-sidebar: 248 39% 97%;
+    --question-nav: 220 14% 96%;
+    --question-nav-active: 207 90% 54%;
+    --answer-selected: 207 90% 96%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Material Design Typography Scale */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark Mode Surface Colors */
+    --background: 210 11% 7%;
+    --foreground: 220 14% 96%;
+    --surface: 210 11% 9%;
+    --surface-variant: 215 16% 12%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Dark Card System */
+    --card: 210 11% 9%;
+    --card-foreground: 220 14% 96%;
+    --card-elevated: 210 11% 11%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Dark Popover */
+    --popover: 210 11% 9%;
+    --popover-foreground: 220 14% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary in Dark Mode */
+    --primary: 207 90% 64%;
+    --primary-foreground: 210 11% 7%;
+    --primary-hover: 207 90% 68%;
+    --primary-light: 207 90% 20%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary in Dark Mode */
+    --secondary: 24 100% 68%;
+    --secondary-foreground: 210 11% 7%;
+    --secondary-hover: 24 100% 72%;
+    --secondary-light: 24 100% 20%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Dark Neutral Tones */
+    --muted: 215 16% 12%;
+    --muted-foreground: 220 14% 70%;
+    --muted-hover: 215 16% 15%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Dark Accent */
+    --accent: 207 90% 20%;
+    --accent-foreground: 207 90% 80%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    /* Dark Status Colors */
+    --success: 142 76% 46%;
+    --warning: 38 92% 60%;
+    --destructive: 0 84% 70%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Dark Borders & Inputs */
+    --border: 215 16% 17%;
+    --input: 215 16% 17%;
+    --input-focus: 207 90% 64%;
+    --ring: 207 90% 64%;
+
+    /* Dark Assessment Interface */
+    --assessment-panel: 210 11% 9%;
+    --assessment-sidebar: 215 16% 12%;
+    --question-nav: 215 16% 15%;
+    --question-nav-active: 207 90% 64%;
+    --answer-selected: 207 90% 15%;
   }
 }
 
@@ -100,6 +157,82 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Material Design Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium leading-tight;
+  }
+
+  h1 { @apply text-4xl; }
+  h2 { @apply text-3xl; }
+  h3 { @apply text-2xl; }
+  h4 { @apply text-xl; }
+  h5 { @apply text-lg; }
+  h6 { @apply text-base; }
+}
+
+@layer components {
+  /* Material Design Card Elevations */
+  .card-elevated {
+    @apply bg-card-elevated shadow-md;
+  }
+
+  .card-floating {
+    @apply bg-card shadow-lg;
+  }
+
+  /* PISA Assessment Interface Components */
+  .assessment-panel {
+    @apply bg-assessment-panel border border-border rounded-lg shadow-sm;
+  }
+
+  .question-nav-tab {
+    @apply px-4 py-2 border border-border bg-question-nav text-center font-medium rounded-sm 
+           transition-all duration-200 hover:bg-muted-hover cursor-pointer;
+  }
+
+  .question-nav-tab.active {
+    @apply bg-question-nav-active text-white border-primary;
+  }
+
+  .answer-option {
+    @apply flex items-start gap-3 p-4 border border-border rounded-lg 
+           transition-all duration-200 hover:bg-muted cursor-pointer;
+  }
+
+  .answer-option.selected {
+    @apply bg-answer-selected border-primary;
+  }
+
+  /* Material Design Button Styles */
+  .btn-material {
+    @apply px-6 py-3 rounded-md font-medium transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  .btn-primary-material {
+    @apply btn-material bg-primary text-primary-foreground 
+           hover:bg-primary-hover shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary-material {
+    @apply btn-material bg-secondary text-secondary-foreground 
+           hover:bg-secondary-hover shadow-md hover:shadow-lg;
+  }
+
+  /* Assessment Navigation */
+  .assessment-nav-btn {
+    @apply px-8 py-3 rounded-md font-medium text-white transition-all duration-200
+           shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .nav-btn-prev {
+    @apply assessment-nav-btn bg-muted-foreground hover:bg-muted-foreground/90 focus:ring-muted-foreground;
+  }
+
+  .nav-btn-next {
+    @apply assessment-nav-btn bg-secondary hover:bg-secondary-hover focus:ring-secondary;
   }
 }
