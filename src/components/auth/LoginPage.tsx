@@ -1,177 +1,171 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCap, Users, BookOpen, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GraduationCap, UserCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("student");
+  const { toast } = useToast();
+  
+  const [studentForm, setStudentForm] = useState({
+    studentId: "", fullName: "", grade: "", class: "", gender: "", age: "", subject: ""
+  });
 
-  const handleLogin = (userType: string) => {
-    if (userType === "student") {
-      navigate("/student/dashboard");
-    } else {
-      navigate("/teacher/dashboard");
+  const [teacherForm, setTeacherForm] = useState({
+    name: "", subject: "", password: ""
+  });
+
+  const handleStudentLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentForm.studentId || !studentForm.fullName || !studentForm.grade || 
+        !studentForm.class || !studentForm.gender || !studentForm.age || !studentForm.subject) {
+      toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
+      return;
     }
+    localStorage.setItem("studentData", JSON.stringify(studentForm));
+    localStorage.setItem("userRole", "student");
+    toast({ title: "Welcome!", description: `Starting your ${studentForm.subject} assessment` });
+    navigate("/assessment");
+  };
+
+  const handleTeacherLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teacherForm.name || !teacherForm.subject || !teacherForm.password) {
+      toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+    if (teacherForm.password !== "teacher2024") {
+      toast({ title: "Invalid Password", description: "Please check your password", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem("teacherData", JSON.stringify(teacherForm));
+    localStorage.setItem("userRole", "teacher");
+    toast({ title: "Welcome Back!", description: "Redirecting to dashboard..." });
+    navigate("/teacher/dashboard");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
-        {/* Left Side - Branding */}
-        <div className="text-center lg:text-left space-y-6 animate-fade-in">
-          <div className="flex items-center justify-center lg:justify-start gap-3">
-            <div className="p-3 bg-primary rounded-2xl shadow-lg">
-              <GraduationCap className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-foreground">PISA Practice</h1>
-              <p className="text-muted-foreground">Assessment Platform</p>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <h2 className="text-3xl font-medium text-foreground">
-              Professional Assessment Experience
-            </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Experience PISA-style assessments with adaptive testing, comprehensive analytics, 
-              and detailed performance insights for both students and teachers.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm">
-              <BookOpen className="h-6 w-6 text-primary" />
-              <div>
-                <h3 className="font-medium">Adaptive Testing</h3>
-                <p className="text-sm text-muted-foreground">Smart difficulty adjustment</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm">
-              <Users className="h-6 w-6 text-primary" />
-              <div>
-                <h3 className="font-medium">Detailed Analytics</h3>
-                <p className="text-sm text-muted-foreground">Comprehensive insights</p>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-primary/10 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl cloud-bubble p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-2">ASD Benchmark Assessment</h1>
+          <p className="text-muted-foreground">Professional PISA-Style Assessment Platform</p>
         </div>
 
-        {/* Right Side - Login Form */}
-        <Card className="p-8 shadow-xl animate-scale-in">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="student" className="text-base py-3">
-                Student Login
-              </TabsTrigger>
-              <TabsTrigger value="teacher" className="text-base py-3">
-                Teacher Login
-              </TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="student" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="student" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />Student Login
+            </TabsTrigger>
+            <TabsTrigger value="teacher" className="flex items-center gap-2">
+              <UserCircle className="h-4 w-4" />Teacher Login
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="student" className="space-y-6">
-              <div className="text-center space-y-2">
-                <h3 className="text-2xl font-semibold">Welcome Back, Student</h3>
-                <p className="text-muted-foreground">Continue your PISA practice journey</p>
-              </div>
-
-              <div className="space-y-4">
+          <TabsContent value="student">
+            <form onSubmit={handleStudentLogin} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="student-email">Email Address</Label>
-                  <Input
-                    id="student-email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className="h-12"
-                  />
+                  <Label htmlFor="studentId">Student ID *</Label>
+                  <Input id="studentId" placeholder="Enter student ID" value={studentForm.studentId}
+                    onChange={(e) => setStudentForm({...studentForm, studentId: e.target.value})} className="input-glassy" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="student-password">Password</Label>
-                  <Input
-                    id="student-password"
-                    type="password"
-                    placeholder="Enter your password"
-                    className="h-12"
-                  />
+                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Input id="fullName" placeholder="Enter full name" value={studentForm.fullName}
+                    onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} className="input-glassy" />
                 </div>
               </div>
 
-              <Button 
-                onClick={() => handleLogin("student")}
-                className="w-full h-12 btn-primary-material group"
-              >
-                Sign In to Dashboard
-                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{" "}
-                  <button 
-                    onClick={() => navigate("/signup")}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Sign up here
-                  </button>
-                </p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="teacher" className="space-y-6">
-              <div className="text-center space-y-2">
-                <h3 className="text-2xl font-semibold">Welcome Back, Teacher</h3>
-                <p className="text-muted-foreground">Access your teaching dashboard</p>
-              </div>
-
-              <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="teacher-email">Email Address</Label>
-                  <Input
-                    id="teacher-email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className="h-12"
-                  />
+                  <Label>Grade *</Label>
+                  <Select value={studentForm.grade} onValueChange={(value) => setStudentForm({...studentForm, grade: value})}>
+                    <SelectTrigger className="input-glassy"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {[6, 7, 8, 9, 10, 11, 12].map(g => <SelectItem key={g} value={g.toString()}>Grade {g}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="teacher-password">Password</Label>
-                  <Input
-                    id="teacher-password"
-                    type="password"
-                    placeholder="Enter your password"
-                    className="h-12"
-                  />
+                  <Label>Class *</Label>
+                  <Select value={studentForm.class} onValueChange={(value) => setStudentForm({...studentForm, class: value})}>
+                    <SelectTrigger className="input-glassy"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {['A', 'B', 'C', 'D', 'E'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Age *</Label>
+                  <Input type="number" placeholder="Age" value={studentForm.age}
+                    onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} className="input-glassy" />
                 </div>
               </div>
 
-              <Button 
-                onClick={() => handleLogin("teacher")}
-                className="w-full h-12 btn-primary-material group"
-              >
-                Access Teaching Dashboard
-                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Need a teacher account?{" "}
-                  <button 
-                    onClick={() => navigate("/signup")}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Register here
-                  </button>
-                </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Gender *</Label>
+                  <Select value={studentForm.gender} onValueChange={(value) => setStudentForm({...studentForm, gender: value})}>
+                    <SelectTrigger className="input-glassy"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Subject *</Label>
+                  <Select value={studentForm.subject} onValueChange={(value) => setStudentForm({...studentForm, subject: value})}>
+                    <SelectTrigger className="input-glassy"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="science">Science</SelectItem>
+                      <SelectItem value="mathematics">Mathematics</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </TabsContent>
-          </Tabs>
-        </Card>
-      </div>
+
+              <Button type="submit" className="w-full nav-btn-next mt-6">Start Assessment</Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="teacher">
+            <form onSubmit={handleTeacherLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Name *</Label>
+                <Input placeholder="Enter your name" value={teacherForm.name}
+                  onChange={(e) => setTeacherForm({...teacherForm, name: e.target.value})} className="input-glassy" />
+              </div>
+              <div className="space-y-2">
+                <Label>Subject *</Label>
+                <Select value={teacherForm.subject} onValueChange={(value) => setTeacherForm({...teacherForm, subject: value})}>
+                  <SelectTrigger className="input-glassy"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                    <SelectItem value="science">Science</SelectItem>
+                    <SelectItem value="mathematics">Mathematics</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Password *</Label>
+                <Input type="password" placeholder="Enter password" value={teacherForm.password}
+                  onChange={(e) => setTeacherForm({...teacherForm, password: e.target.value})} className="input-glassy" />
+              </div>
+              <Button type="submit" className="w-full nav-btn-next mt-6">Login to Dashboard</Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </Card>
     </div>
   );
 };
