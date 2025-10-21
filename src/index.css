@@ -183,8 +183,8 @@ Calm, modern, PISA-style with soft pastels and glassy effects
   }
 
   .cloud-bubble-top {
-    @apply bg-bubble-top/80 backdrop-blur-md rounded-[2rem] shadow-lg 
-           border border-white/50;
+    background-color: hsl(var(--bubble-top) / 0.8);
+    @apply backdrop-blur-md rounded-[2rem] shadow-lg border border-white/50;
   }
 
   .cloud-bubble-main {
