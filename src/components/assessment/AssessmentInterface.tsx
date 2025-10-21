@@ -217,6 +217,8 @@ const AssessmentInterface = () => {
     }
     setAssignedLevel(level);
     setPracticeComplete(true);
+    setCurrentQuestion(0);
+    setSelectedAnswer("");
     
     toast({
       title: "Practice Complete!",
