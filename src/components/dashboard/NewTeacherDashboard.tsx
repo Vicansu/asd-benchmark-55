@@ -1,122 +1,99 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy, CheckCircle } from "lucide-react";
+import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 
 const NewTeacherDashboard = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<any>(null);
+  const [teacher, setTeacher] = useState<any>(null);
   const [tests, setTests] = useState<any[]>([]);
   const [allResults, setAllResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   
   // Upload form
   const [testTitle, setTestTitle] = useState("");
   const [testSubject, setTestSubject] = useState("");
   const [testDuration, setTestDuration] = useState("60");
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
+    const currentTeacher = localStorage.getItem("currentTeacher");
+    if (!currentTeacher) {
+      navigate('/');
       return;
     }
-    loadDashboardData();
-  }, [user, navigate]);
+    const teacherData = JSON.parse(currentTeacher);
+    setTeacher(teacherData);
 
-  const loadDashboardData = async () => {
-    try {
-      // Load profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-      
-      setProfile(profileData);
+    // Load tests created by this teacher
+    const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+    const teacherTests = allTests.filter((t: any) => t.teacherId === teacherData.teacherId);
+    setTests(teacherTests);
 
-      // Load tests created by this teacher
-      const { data: testsData } = await supabase
-        .from('tests')
-        .select('*')
-        .eq('created_by', user?.id)
-        .order('created_at', { ascending: false });
+    // Load all test results
+    const results = JSON.parse(localStorage.getItem("testResults") || "[]");
+    const teacherResults = results.filter((r: any) => 
+      teacherTests.some((t: any) => t.testCode === r.testCode)
+    );
+    setAllResults(teacherResults);
+  }, [navigate]);
 
-      setTests(testsData || []);
-
-      // Load all test results
-      const { data: resultsData } = await supabase
-        .from('test_results')
-        .select(`
-          *,
-          tests!inner(created_by),
-          profiles!test_results_student_id_fkey(full_name, gender, grade, class)
-        `)
-        .eq('tests.created_by', user?.id);
-
-      setAllResults(resultsData || []);
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("currentTeacher");
+    localStorage.removeItem("userRole");
+    toast({ title: "Logged out", description: "See you next time!" });
+    navigate('/');
   };
 
-  const handleCreateTest = async (e: React.FormEvent) => {
+  const generateTestCode = (subject: string) => {
+    const prefix = subject === 'english' ? 'E' : subject === 'science' ? 'S' : 'M';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = prefix;
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  };
+
+  const handleCreateTest = (e: React.FormEvent) => {
     e.preventDefault();
     if (!testTitle || !testSubject) {
       toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
       return;
     }
 
-    setUploading(true);
-    try {
-      // Generate test code
-      const { data: codeData, error: codeError } = await supabase
-        .rpc('generate_test_code', { subject_param: testSubject });
+    const testCode = generateTestCode(testSubject);
+    const newTest = {
+      testCode,
+      subject: testSubject,
+      title: testTitle,
+      durationMinutes: parseInt(testDuration),
+      teacherId: teacher.teacherId,
+      teacherName: teacher.fullName,
+      createdAt: new Date().toISOString()
+    };
 
-      if (codeError) throw codeError;
+    const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+    allTests.push(newTest);
+    localStorage.setItem("tests", JSON.stringify(allTests));
 
-      // Create test
-      const { error: insertError } = await supabase
-        .from('tests')
-        .insert({
-          test_code: codeData,
-          subject: testSubject,
-          title: testTitle,
-          duration_minutes: parseInt(testDuration),
-          created_by: user?.id
-        });
+    toast({ 
+      title: "Test Created!", 
+      description: `Test code: ${testCode}`,
+      duration: 5000
+    });
 
-      if (insertError) throw insertError;
-
-      toast({ 
-        title: "Test Created!", 
-        description: `Test code: ${codeData}`,
-        duration: 5000
-      });
-
-      // Reset form and reload
-      setTestTitle("");
-      setTestSubject("");
-      setTestDuration("60");
-      loadDashboardData();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setUploading(false);
-    }
+    // Reset form and reload
+    setTestTitle("");
+    setTestSubject("");
+    setTestDuration("60");
+    setTests([...tests, newTest]);
   };
 
   const copyTestCode = (code: string) => {
@@ -124,18 +101,20 @@ const NewTeacherDashboard = () => {
     toast({ title: "Copied!", description: "Test code copied to clipboard" });
   };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
+  if (!teacher) return null;
 
   // Analytics calculations
   const avgScore = allResults.length > 0
     ? (allResults.reduce((sum, r) => sum + (r.score || 0), 0) / allResults.length).toFixed(1)
     : 0;
 
+  const students = JSON.parse(localStorage.getItem("students") || "[]");
+  const studentCount = new Set(allResults.map(r => r.studentId)).size;
+
   const genderPerformance = Object.entries(
     allResults.reduce((acc: any, r) => {
-      const gender = r.profiles?.gender || 'Unknown';
+      const student = students.find((s: any) => s.studentId === r.studentId);
+      const gender = student?.gender || 'Unknown';
       if (!acc[gender]) acc[gender] = { total: 0, count: 0 };
       acc[gender].total += r.score || 0;
       acc[gender].count += 1;
@@ -143,12 +122,13 @@ const NewTeacherDashboard = () => {
     }, {})
   ).map(([gender, data]: [string, any]) => ({
     gender,
-    avgScore: (data.total / data.count).toFixed(1)
+    avgScore: parseFloat((data.total / data.count).toFixed(1))
   }));
 
   const classPerformance = Object.entries(
     allResults.reduce((acc: any, r) => {
-      const className = `${r.profiles?.grade}-${r.profiles?.class}` || 'Unknown';
+      const student = students.find((s: any) => s.studentId === r.studentId);
+      const className = student ? `${student.grade}-${student.class}` : 'Unknown';
       if (!acc[className]) acc[className] = { total: 0, count: 0 };
       acc[className].total += r.score || 0;
       acc[className].count += 1;
@@ -156,16 +136,24 @@ const NewTeacherDashboard = () => {
     }, {})
   ).map(([name, data]: [string, any]) => ({
     name,
-    avgScore: (data.total / data.count).toFixed(1)
+    avgScore: parseFloat((data.total / data.count).toFixed(1))
   }));
 
   const performanceTrend = allResults
-    .sort((a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime())
+    .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime())
     .slice(-10)
     .map((r, i) => ({
       test: `T${i + 1}`,
       score: r.score || 0
     }));
+
+  const difficultyDistribution = Object.entries(
+    allResults.reduce((acc: any, r) => {
+      const diff = r.difficultyLevel || 'Unknown';
+      acc[diff] = (acc[diff] || 0) + 1;
+      return acc;
+    }, {})
+  ).map(([name, value]) => ({ name, value }));
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--destructive))'];
 
@@ -176,9 +164,9 @@ const NewTeacherDashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Teacher Dashboard</h1>
-            <p className="text-muted-foreground">Welcome, {profile?.full_name}!</p>
+            <p className="text-muted-foreground">Welcome, {teacher.fullName}!</p>
           </div>
-          <Button variant="outline" onClick={signOut}>
+          <Button variant="outline" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
@@ -201,7 +189,7 @@ const NewTeacherDashboard = () => {
               <Users className="h-10 w-10 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Total Students</p>
-                <p className="text-3xl font-bold">{new Set(allResults.map(r => r.student_id)).size}</p>
+                <p className="text-3xl font-bold">{studentCount}</p>
               </div>
             </div>
           </Card>
@@ -276,8 +264,8 @@ const NewTeacherDashboard = () => {
                   />
                 </div>
 
-                <Button type="submit" disabled={uploading} className="w-full nav-btn-next">
-                  {uploading ? "Creating..." : "Create Test"}
+                <Button type="submit" className="w-full nav-btn-next">
+                  Create Test
                 </Button>
               </form>
             </Card>
@@ -290,23 +278,23 @@ const NewTeacherDashboard = () => {
                 {tests.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No tests created yet</p>
                 ) : (
-                  tests.map((test) => (
-                    <div key={test.id} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
+                  tests.map((test, idx) => (
+                    <div key={idx} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
                       <div className="flex-1">
                         <p className="font-medium">{test.title}</p>
                         <p className="text-sm text-muted-foreground">
-                          {test.subject} • {test.duration_minutes} min • {new Date(test.created_at).toLocaleDateString()}
+                          {test.subject} • {test.durationMinutes} min • {new Date(test.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="text-right mr-4">
-                          <p className="text-lg font-bold text-primary">{test.test_code}</p>
+                          <p className="text-lg font-bold text-primary">{test.testCode}</p>
                           <p className="text-xs text-muted-foreground">Test Code</p>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyTestCode(test.test_code)}
+                          onClick={() => copyTestCode(test.testCode)}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -320,43 +308,99 @@ const NewTeacherDashboard = () => {
 
           <TabsContent value="analytics" className="space-y-6">
             <Card className="cloud-bubble p-6">
-              <h3 className="text-lg font-semibold mb-4">Performance Trend</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={performanceTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="test" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              <h3 className="text-lg font-semibold mb-4">Class Performance Trend</h3>
+              {performanceTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={performanceTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="test" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No test data yet</p>
+              )}
             </Card>
 
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="cloud-bubble p-6">
                 <h3 className="text-lg font-semibold mb-4">Gender Performance</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={genderPerformance}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="gender" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="avgScore" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {genderPerformance.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={genderPerformance}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="gender" />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Bar dataKey="avgScore" fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                )}
               </Card>
 
               <Card className="cloud-bubble p-6">
                 <h3 className="text-lg font-semibold mb-4">Class Performance</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={classPerformance}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="avgScore" fill="hsl(var(--secondary))" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {classPerformance.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={classPerformance}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Bar dataKey="avgScore" fill="hsl(var(--secondary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                )}
+              </Card>
+
+              <Card className="cloud-bubble p-6">
+                <h3 className="text-lg font-semibold mb-4">Difficulty Distribution</h3>
+                {difficultyDistribution.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={difficultyDistribution}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry) => entry.name}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {difficultyDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                )}
+              </Card>
+
+              <Card className="cloud-bubble p-6">
+                <h3 className="text-lg font-semibold mb-4">Score Distribution</h3>
+                {allResults.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={allResults.slice(0, 10)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="studentId" hide />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Bar dataKey="score" fill="hsl(var(--accent))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                )}
               </Card>
             </div>
           </TabsContent>
@@ -368,22 +412,28 @@ const NewTeacherDashboard = () => {
                 {allResults.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No student results yet</p>
                 ) : (
-                  allResults.map((result) => (
-                    <div key={result.id} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{result.profiles?.full_name || 'Unknown'}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Grade {result.profiles?.grade}-{result.profiles?.class} • {result.profiles?.gender} • {result.difficulty_level}
-                        </p>
+                  allResults.map((result, idx) => {
+                    const student = students.find((s: any) => s.studentId === result.studentId);
+                    return (
+                      <div key={idx} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{student?.fullName || 'Unknown Student'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            ID: {result.studentId} • Grade {student?.grade}-{student?.class} • {student?.gender} • {result.difficultyLevel}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Test: {result.testTitle} • {new Date(result.completedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-primary">{result.score}%</p>
+                          <p className="text-xs text-muted-foreground">
+                            {Math.floor(result.timeSpent / 60)} min
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">{result.score}%</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(result.completed_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </Card>

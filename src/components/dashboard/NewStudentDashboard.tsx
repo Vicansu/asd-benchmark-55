@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -12,80 +10,67 @@ import { useToast } from "@/hooks/use-toast";
 
 const NewStudentDashboard = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<any>(null);
+  const [student, setStudent] = useState<any>(null);
   const [testCode, setTestCode] = useState("");
   const [testResults, setTestResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
+    const currentStudent = localStorage.getItem("currentStudent");
+    if (!currentStudent) {
+      navigate('/');
       return;
     }
-    loadDashboardData();
-  }, [user, navigate]);
+    const studentData = JSON.parse(currentStudent);
+    setStudent(studentData);
 
-  const loadDashboardData = async () => {
-    try {
-      // Load profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-      
-      setProfile(profileData);
+    // Load test results for this student
+    const results = JSON.parse(localStorage.getItem("testResults") || "[]");
+    const studentResults = results.filter((r: any) => r.studentId === studentData.studentId);
+    setTestResults(studentResults);
+  }, [navigate]);
 
-      // Load test results
-      const { data: resultsData } = await supabase
-        .from('test_results')
-        .select(`
-          *,
-          tests (
-            title,
-            subject,
-            test_code
-          )
-        `)
-        .eq('student_id', user?.id)
-        .order('completed_at', { ascending: false });
-
-      setTestResults(resultsData || []);
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("currentStudent");
+    localStorage.removeItem("userRole");
+    toast({ title: "Logged out", description: "See you next time!" });
+    navigate('/');
   };
 
-  const handleEnterTestCode = async () => {
+  const handleEnterTestCode = () => {
     if (!testCode.trim()) {
       toast({ title: "Error", description: "Please enter a test code", variant: "destructive" });
       return;
     }
 
-    const { data: test, error } = await supabase
-      .from('tests')
-      .select('*')
-      .eq('test_code', testCode.toUpperCase())
-      .eq('is_active', true)
-      .single();
+    // Validate test code format (1 letter + 5 characters)
+    if (testCode.length !== 6) {
+      toast({ title: "Error", description: "Test code must be 6 characters", variant: "destructive" });
+      return;
+    }
 
-    if (error || !test) {
+    const tests = JSON.parse(localStorage.getItem("tests") || "[]");
+    const test = tests.find((t: any) => t.testCode === testCode.toUpperCase());
+
+    if (!test) {
       toast({ title: "Error", description: "Invalid test code", variant: "destructive" });
+      return;
+    }
+
+    // Check if already taken
+    const hasAlreadyTaken = testResults.some(r => r.testCode === testCode.toUpperCase());
+    if (hasAlreadyTaken) {
+      toast({ title: "Already Taken", description: "You have already completed this test", variant: "destructive" });
       return;
     }
 
     // Store test info and navigate to assessment
     localStorage.setItem('currentTest', JSON.stringify(test));
+    localStorage.setItem("studentData", JSON.stringify(student));
     navigate('/assessment');
   };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
+  if (!student) return null;
 
   const avgScore = testResults.length > 0 
     ? (testResults.reduce((sum, r) => sum + (r.score || 0), 0) / testResults.length).toFixed(1)
@@ -98,8 +83,16 @@ const NewStudentDashboard = () => {
 
   const subjectData = Object.entries(
     testResults.reduce((acc: any, r) => {
-      const subject = r.tests?.subject || 'Unknown';
+      const subject = r.subject || 'Unknown';
       acc[subject] = (acc[subject] || 0) + 1;
+      return acc;
+    }, {})
+  ).map(([name, value]) => ({ name, value }));
+
+  const difficultyData = Object.entries(
+    testResults.reduce((acc: any, r) => {
+      const diff = r.difficultyLevel || 'Unknown';
+      acc[diff] = (acc[diff] || 0) + 1;
       return acc;
     }, {})
   ).map(([name, value]) => ({ name, value }));
@@ -113,9 +106,9 @@ const NewStudentDashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {profile?.full_name}!</p>
+            <p className="text-muted-foreground">Welcome back, {student.fullName}!</p>
           </div>
-          <Button variant="outline" onClick={signOut}>
+          <Button variant="outline" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
@@ -170,7 +163,7 @@ const NewStudentDashboard = () => {
               <Award className="h-10 w-10 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Subject</p>
-                <p className="text-2xl font-bold capitalize">{profile?.subject}</p>
+                <p className="text-2xl font-bold capitalize">{student.subject}</p>
               </div>
             </div>
           </Card>
@@ -187,39 +180,66 @@ const NewStudentDashboard = () => {
           <TabsContent value="performance" className="space-y-6">
             <Card className="cloud-bubble p-6">
               <h3 className="text-lg font-semibold mb-4">Score Trend</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={scoreData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              {scoreData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={scoreData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No test data yet</p>
+              )}
             </Card>
 
-            <Card className="cloud-bubble p-6">
-              <h3 className="text-lg font-semibold mb-4">Tests by Subject</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={subjectData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => entry.name}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {subjectData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="cloud-bubble p-6">
+                <h3 className="text-lg font-semibold mb-4">Tests by Subject</h3>
+                {subjectData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={subjectData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry) => entry.name}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {subjectData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                )}
+              </Card>
+
+              <Card className="cloud-bubble p-6">
+                <h3 className="text-lg font-semibold mb-4">Difficulty Levels</h3>
+                {difficultyData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={difficultyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                )}
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="history">
@@ -229,18 +249,18 @@ const NewStudentDashboard = () => {
                 {testResults.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No tests taken yet</p>
                 ) : (
-                  testResults.map((result) => (
-                    <div key={result.id} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
+                  testResults.map((result, idx) => (
+                    <div key={idx} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
                       <div>
-                        <p className="font-medium">{result.tests?.title || 'Test'}</p>
+                        <p className="font-medium">{result.testTitle || 'Test'}</p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(result.completed_at).toLocaleDateString()} • {result.difficulty_level}
+                          {new Date(result.completedAt).toLocaleDateString()} • {result.difficultyLevel}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-primary">{result.score}%</p>
                         <p className="text-xs text-muted-foreground">
-                          {Math.floor(result.time_spent_seconds / 60)} min
+                          {Math.floor(result.timeSpent / 60)} min
                         </p>
                       </div>
                     </div>
@@ -254,13 +274,13 @@ const NewStudentDashboard = () => {
             <Card className="cloud-bubble p-6">
               <h3 className="text-lg font-semibold mb-4">Your Profile</h3>
               <div className="space-y-3">
-                <div><span className="font-medium">Student ID:</span> {profile?.student_id}</div>
-                <div><span className="font-medium">Name:</span> {profile?.full_name}</div>
-                <div><span className="font-medium">Grade:</span> {profile?.grade}</div>
-                <div><span className="font-medium">Class:</span> {profile?.class}</div>
-                <div><span className="font-medium">Gender:</span> {profile?.gender}</div>
-                <div><span className="font-medium">Age:</span> {profile?.age}</div>
-                <div><span className="font-medium">Subject:</span> {profile?.subject}</div>
+                <div><span className="font-medium">Student ID:</span> {student.studentId}</div>
+                <div><span className="font-medium">Name:</span> {student.fullName}</div>
+                <div><span className="font-medium">Grade:</span> {student.grade}</div>
+                <div><span className="font-medium">Class:</span> {student.class}</div>
+                <div><span className="font-medium">Gender:</span> {student.gender}</div>
+                <div><span className="font-medium">Age:</span> {student.age}</div>
+                <div><span className="font-medium">Subject:</span> {student.subject}</div>
               </div>
             </Card>
           </TabsContent>

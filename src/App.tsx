@@ -21,9 +21,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/dashboard" element={<NewStudentDashboard />} />
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/student/dashboard" element={<NewStudentDashboard />} />
             <Route path="/teacher/dashboard" element={<NewTeacherDashboard />} />
             <Route path="/assessment" element={<AssessmentInterface />} />
             <Route path="*" element={<NotFound />} />

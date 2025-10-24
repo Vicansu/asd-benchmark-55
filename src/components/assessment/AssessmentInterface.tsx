@@ -248,19 +248,43 @@ const AssessmentInterface = () => {
   };
 
   const handleSubmit = () => {
-    const results = {
-      studentData,
-      answers,
-      assignedLevel,
+    // Calculate score
+    const questions = getCurrentQuestions();
+    let correct = 0;
+    questions.forEach((q, idx) => {
+      if (answers[idx] === q.correctAnswer) {
+        correct++;
+      }
+    });
+    const score = Math.round((correct / questions.length) * 100);
+
+    // Get current test info
+    const currentTest = JSON.parse(localStorage.getItem("currentTest") || "{}");
+    
+    const result = {
+      studentId: studentData.studentId,
+      testCode: currentTest.testCode || "DEMO",
+      testTitle: currentTest.title || "Demo Test",
+      subject: studentData.subject,
+      score,
+      difficultyLevel: assignedLevel,
       timeSpent: 3600 - timeRemaining,
-      completionDate: new Date().toISOString()
+      completedAt: new Date().toISOString(),
+      answers,
+      markedForReview: Array.from(markedForReview)
     };
     
-    localStorage.setItem("assessmentResults", JSON.stringify(results));
+    // Save to test results
+    const testResults = JSON.parse(localStorage.getItem("testResults") || "[]");
+    testResults.push(result);
+    localStorage.setItem("testResults", JSON.stringify(testResults));
+    
+    // Clear current test
+    localStorage.removeItem("currentTest");
     
     toast({
       title: "Assessment Complete!",
-      description: "Redirecting to dashboard...",
+      description: `Your score: ${score}%`,
     });
     
     navigate("/student/dashboard");

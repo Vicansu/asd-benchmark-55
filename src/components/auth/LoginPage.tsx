@@ -8,81 +8,108 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, UserCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp, signIn, user } = useAuth();
   
   const [isSignUp, setIsSignUp] = useState(true);
   const [studentForm, setStudentForm] = useState({
-    email: "", password: "", studentId: "", fullName: "", grade: "", class: "", gender: "", age: "", subject: ""
+    studentId: "", password: "", fullName: "", grade: "", class: "", gender: "", age: "", subject: ""
   });
 
   const [teacherForm, setTeacherForm] = useState({
-    email: "", password: "", fullName: "", subject: ""
+    teacherId: "", password: "", fullName: "", subject: ""
   });
 
-  // Redirect if already logged in
-  if (user) {
-    setTimeout(() => navigate('/dashboard'), 0);
-    return null;
-  }
-
-  const handleStudentAuth = async (e: React.FormEvent) => {
+  const handleStudentAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentForm.email || !studentForm.password || !studentForm.studentId || !studentForm.fullName || 
-        !studentForm.grade || !studentForm.class || !studentForm.gender || !studentForm.age || !studentForm.subject) {
-      toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
-      return;
-    }
-
-    const { error } = isSignUp 
-      ? await signUp(studentForm.email, studentForm.password, {
-          role: 'student',
-          fullName: studentForm.fullName,
-          studentId: studentForm.studentId,
-          grade: studentForm.grade,
-          class: studentForm.class,
-          gender: studentForm.gender,
-          age: parseInt(studentForm.age),
-          subject: studentForm.subject
-        })
-      : await signIn(studentForm.email, studentForm.password);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    
+    if (isSignUp) {
+      // Sign up validation
+      if (!studentForm.studentId || !studentForm.password || !studentForm.fullName || 
+          !studentForm.grade || !studentForm.class || !studentForm.gender || !studentForm.age || !studentForm.subject) {
+        toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
+        return;
+      }
+      
+      // Store student data
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+      if (students.find((s: any) => s.studentId === studentForm.studentId)) {
+        toast({ title: "Error", description: "Student ID already exists", variant: "destructive" });
+        return;
+      }
+      
+      students.push(studentForm);
+      localStorage.setItem("students", JSON.stringify(students));
+      toast({ title: "Success!", description: "Account created! Please login." });
+      setIsSignUp(false);
     } else {
-      toast({ title: "Success!", description: isSignUp ? "Account created!" : "Welcome back!" });
-      navigate("/dashboard");
+      // Login validation
+      if (!studentForm.studentId || !studentForm.password) {
+        toast({ title: "Missing Information", description: "Please enter Student ID and password", variant: "destructive" });
+        return;
+      }
+      
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+      const student = students.find((s: any) => s.studentId === studentForm.studentId && s.password === studentForm.password);
+      
+      if (!student) {
+        toast({ title: "Error", description: "Invalid Student ID or password", variant: "destructive" });
+        return;
+      }
+      
+      localStorage.setItem("currentStudent", JSON.stringify(student));
+      localStorage.setItem("userRole", "student");
+      toast({ title: "Welcome!", description: `Logged in as ${student.fullName}` });
+      navigate("/student/dashboard");
     }
   };
 
-  const handleTeacherAuth = async (e: React.FormEvent) => {
+  const handleTeacherAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!teacherForm.email || !teacherForm.password || !teacherForm.fullName || !teacherForm.subject) {
-      toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
-      return;
-    }
-
-    if (isSignUp && teacherForm.password !== "Amb@ssador#Bench!") {
-      toast({ title: "Invalid Admin Password", description: "Please check your password", variant: "destructive" });
-      return;
-    }
-
-    const { error } = isSignUp
-      ? await signUp(teacherForm.email, teacherForm.password, {
-          role: 'teacher',
-          fullName: teacherForm.fullName,
-          subject: teacherForm.subject
-        })
-      : await signIn(teacherForm.email, teacherForm.password);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    
+    if (isSignUp) {
+      // Sign up validation with admin password
+      if (!teacherForm.teacherId || !teacherForm.password || !teacherForm.fullName || !teacherForm.subject) {
+        toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
+        return;
+      }
+      
+      if (teacherForm.password !== "Amb@ssador#Bench!") {
+        toast({ title: "Invalid Admin Password", description: "Please check your password", variant: "destructive" });
+        return;
+      }
+      
+      // Store teacher data
+      const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
+      if (teachers.find((t: any) => t.teacherId === teacherForm.teacherId)) {
+        toast({ title: "Error", description: "Teacher ID already exists", variant: "destructive" });
+        return;
+      }
+      
+      teachers.push(teacherForm);
+      localStorage.setItem("teachers", JSON.stringify(teachers));
+      toast({ title: "Success!", description: "Account created! Please login." });
+      setIsSignUp(false);
     } else {
-      toast({ title: "Success!", description: isSignUp ? "Account created!" : "Welcome back!" });
+      // Login validation
+      if (!teacherForm.teacherId || !teacherForm.password) {
+        toast({ title: "Missing Information", description: "Please enter Teacher ID and password", variant: "destructive" });
+        return;
+      }
+      
+      const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
+      const teacher = teachers.find((t: any) => t.teacherId === teacherForm.teacherId && t.password === teacherForm.password);
+      
+      if (!teacher) {
+        toast({ title: "Error", description: "Invalid Teacher ID or password", variant: "destructive" });
+        return;
+      }
+      
+      localStorage.setItem("currentTeacher", JSON.stringify(teacher));
+      localStorage.setItem("userRole", "teacher");
+      toast({ title: "Welcome!", description: `Logged in as ${teacher.fullName}` });
       navigate("/teacher/dashboard");
     }
   };
@@ -125,29 +152,39 @@ const LoginPage = () => {
 
             <form onSubmit={handleStudentAuth} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="student-email">Email *</Label>
-                <Input id="student-email" type="email" placeholder="Enter email" value={studentForm.email}
-                  onChange={(e) => setStudentForm({...studentForm, email: e.target.value})} className="input-glassy" />
+                <Label htmlFor="student-id">Student ID *</Label>
+                <Input 
+                  id="student-id" 
+                  placeholder="Enter student ID" 
+                  value={studentForm.studentId}
+                  onChange={(e) => setStudentForm({...studentForm, studentId: e.target.value})} 
+                  className="input-glassy" 
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="student-password">Password *</Label>
-                <Input id="student-password" type="password" placeholder="Enter password" value={studentForm.password}
-                  onChange={(e) => setStudentForm({...studentForm, password: e.target.value})} className="input-glassy" />
+                <Input 
+                  id="student-password" 
+                  type="password" 
+                  placeholder="Enter password" 
+                  value={studentForm.password}
+                  onChange={(e) => setStudentForm({...studentForm, password: e.target.value})} 
+                  className="input-glassy" 
+                />
               </div>
 
               {isSignUp && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="studentId">Student ID *</Label>
-                    <Input id="studentId" placeholder="Enter student ID" value={studentForm.studentId}
-                      onChange={(e) => setStudentForm({...studentForm, studentId: e.target.value})} className="input-glassy" />
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name *</Label>
-                    <Input id="fullName" placeholder="Enter full name" value={studentForm.fullName}
-                      onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} className="input-glassy" />
+                    <Input 
+                      id="fullName" 
+                      placeholder="Enter full name" 
+                      value={studentForm.fullName}
+                      onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} 
+                      className="input-glassy" 
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -164,26 +201,47 @@ const LoginPage = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="grade">Grade *</Label>
-                    <Input id="grade" placeholder="e.g., 10" value={studentForm.grade}
-                      onChange={(e) => setStudentForm({...studentForm, grade: e.target.value})} className="input-glassy" />
+                    <Input 
+                      id="grade" 
+                      placeholder="e.g., 10" 
+                      value={studentForm.grade}
+                      onChange={(e) => setStudentForm({...studentForm, grade: e.target.value})} 
+                      className="input-glassy" 
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="class">Class *</Label>
-                    <Input id="class" placeholder="e.g., A" value={studentForm.class}
-                      onChange={(e) => setStudentForm({...studentForm, class: e.target.value})} className="input-glassy" />
+                    <Input 
+                      id="class" 
+                      placeholder="e.g., A" 
+                      value={studentForm.class}
+                      onChange={(e) => setStudentForm({...studentForm, class: e.target.value})} 
+                      className="input-glassy" 
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender *</Label>
-                    <Input id="gender" placeholder="e.g., Male, Female, Other" value={studentForm.gender}
-                      onChange={(e) => setStudentForm({...studentForm, gender: e.target.value})} className="input-glassy" />
+                    <Input 
+                      id="gender" 
+                      placeholder="e.g., Male, Female, Other" 
+                      value={studentForm.gender}
+                      onChange={(e) => setStudentForm({...studentForm, gender: e.target.value})} 
+                      className="input-glassy" 
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="age">Age *</Label>
-                    <Input id="age" type="number" placeholder="Enter age" value={studentForm.age}
-                      onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} className="input-glassy" />
+                    <Input 
+                      id="age" 
+                      type="number" 
+                      placeholder="Enter age" 
+                      value={studentForm.age}
+                      onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} 
+                      className="input-glassy" 
+                    />
                   </div>
                 </>
               )}
@@ -214,25 +272,39 @@ const LoginPage = () => {
 
             <form onSubmit={handleTeacherAuth} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="teacher-email">Email *</Label>
-                <Input id="teacher-email" type="email" placeholder="Enter email" value={teacherForm.email}
-                  onChange={(e) => setTeacherForm({...teacherForm, email: e.target.value})} className="input-glassy" />
+                <Label htmlFor="teacher-id">Teacher ID *</Label>
+                <Input 
+                  id="teacher-id" 
+                  placeholder="Enter teacher ID" 
+                  value={teacherForm.teacherId}
+                  onChange={(e) => setTeacherForm({...teacherForm, teacherId: e.target.value})} 
+                  className="input-glassy" 
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="teacher-password">{isSignUp ? "Admin Password" : "Password"} *</Label>
-                <Input id="teacher-password" type="password" 
-                  placeholder={isSignUp ? "Enter admin password" : "Enter password"} 
+                <Input 
+                  id="teacher-password" 
+                  type="password" 
+                  placeholder={isSignUp ? "Enter admin password: Amb@ssador#Bench!" : "Enter password"} 
                   value={teacherForm.password}
-                  onChange={(e) => setTeacherForm({...teacherForm, password: e.target.value})} className="input-glassy" />
+                  onChange={(e) => setTeacherForm({...teacherForm, password: e.target.value})} 
+                  className="input-glassy" 
+                />
               </div>
 
               {isSignUp && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="teacher-name">Full Name *</Label>
-                    <Input id="teacher-name" placeholder="Enter your name" value={teacherForm.fullName}
-                      onChange={(e) => setTeacherForm({...teacherForm, fullName: e.target.value})} className="input-glassy" />
+                    <Input 
+                      id="teacher-name" 
+                      placeholder="Enter your name" 
+                      value={teacherForm.fullName}
+                      onChange={(e) => setTeacherForm({...teacherForm, fullName: e.target.value})} 
+                      className="input-glassy" 
+                    />
                   </div>
 
                   <div className="space-y-2">
