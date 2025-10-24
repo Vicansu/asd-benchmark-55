@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Clock, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, BookOpen, ChevronLeft, ChevronRight, Flag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Question {
@@ -26,6 +26,7 @@ const AssessmentInterface = () => {
   const [studentData, setStudentData] = useState<any>(null);
   const [assignedLevel, setAssignedLevel] = useState<"easy" | "medium" | "hard" | null>(null);
   const [practiceComplete, setPracticeComplete] = useState(false);
+  const [markedForReview, setMarkedForReview] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const data = localStorage.getItem("studentData");
@@ -308,11 +309,14 @@ const AssessmentInterface = () => {
                       setCurrentQuestion(idx);
                       setSelectedAnswer(answers[idx] || "");
                     }}
-                    className={`question-nav-bubble ${
+                    className={`question-nav-bubble relative ${
                       idx === currentQuestion ? "active" : answers[idx] ? "answered" : "unanswered"
                     }`}
                   >
                     {idx + 1}
+                    {markedForReview.has(idx) && (
+                      <Flag className="h-3 w-3 absolute -top-1 -right-1 fill-yellow-500 text-yellow-500" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -386,6 +390,26 @@ const AssessmentInterface = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Mark for Review */}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newMarked = new Set(markedForReview);
+                  if (newMarked.has(currentQuestion)) {
+                    newMarked.delete(currentQuestion);
+                    toast({ title: "Unmarked", description: "Question removed from review list" });
+                  } else {
+                    newMarked.add(currentQuestion);
+                    toast({ title: "Marked for Review", description: "Question added to review list" });
+                  }
+                  setMarkedForReview(newMarked);
+                }}
+                className="w-full"
+              >
+                <Flag className={`h-4 w-4 mr-2 ${markedForReview.has(currentQuestion) ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                {markedForReview.has(currentQuestion) ? 'Marked for Review' : 'Mark for Review'}
+              </Button>
 
               {/* Navigation Buttons */}
               <div className="flex justify-between items-center gap-4">

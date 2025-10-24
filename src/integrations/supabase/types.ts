@@ -14,16 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          age: number | null
+          class: string | null
+          created_at: string
+          full_name: string
+          gender: string | null
+          grade: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          student_id: string | null
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          class?: string | null
+          created_at?: string
+          full_name: string
+          gender?: string | null
+          grade?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          student_id?: string | null
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          class?: string | null
+          created_at?: string
+          full_name?: string
+          gender?: string | null
+          grade?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          student_id?: string | null
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          answers: Json | null
+          completed_at: string
+          difficulty_level: string | null
+          id: string
+          marked_for_review: number[] | null
+          score: number | null
+          student_id: string
+          test_id: string
+          time_spent_seconds: number | null
+        }
+        Insert: {
+          answers?: Json | null
+          completed_at?: string
+          difficulty_level?: string | null
+          id?: string
+          marked_for_review?: number[] | null
+          score?: number | null
+          student_id: string
+          test_id: string
+          time_spent_seconds?: number | null
+        }
+        Update: {
+          answers?: Json | null
+          completed_at?: string
+          difficulty_level?: string | null
+          id?: string
+          marked_for_review?: number[] | null
+          score?: number | null
+          student_id?: string
+          test_id?: string
+          time_spent_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tests: {
+        Row: {
+          created_at: string
+          created_by: string
+          duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          pdf_url: string | null
+          subject: string
+          test_code: string
+          title: string
+          total_questions: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          pdf_url?: string | null
+          subject: string
+          test_code: string
+          title: string
+          total_questions?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          pdf_url?: string | null
+          subject?: string
+          test_code?: string
+          title?: string
+          total_questions?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_test_code: { Args: { subject_param: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +302,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "teacher", "student"],
+    },
   },
 } as const
