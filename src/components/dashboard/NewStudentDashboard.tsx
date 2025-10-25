@@ -162,8 +162,8 @@ const NewStudentDashboard = () => {
             <div className="flex items-center gap-4">
               <Award className="h-10 w-10 text-primary" />
               <div>
-                <p className="text-sm text-muted-foreground">Subject</p>
-                <p className="text-2xl font-bold capitalize">{student.subject}</p>
+                <p className="text-sm text-muted-foreground">Available Subjects</p>
+                <p className="text-2xl font-bold">All Subjects</p>
               </div>
             </div>
           </Card>
@@ -280,7 +280,6 @@ const NewStudentDashboard = () => {
                 <div><span className="font-medium">Class:</span> {student.class}</div>
                 <div><span className="font-medium">Gender:</span> {student.gender}</div>
                 <div><span className="font-medium">Age:</span> {student.age}</div>
-                <div><span className="font-medium">Subject:</span> {student.subject}</div>
               </div>
             </Card>
           </TabsContent>

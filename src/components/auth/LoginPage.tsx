@@ -15,7 +15,7 @@ const LoginPage = () => {
   
   const [isSignUp, setIsSignUp] = useState(true);
   const [studentForm, setStudentForm] = useState({
-    studentId: "", password: "", fullName: "", grade: "", class: "", gender: "", age: "", subject: ""
+    studentId: "", password: "", fullName: "", grade: "", class: "", gender: "", age: ""
   });
 
   const [teacherForm, setTeacherForm] = useState({
@@ -28,7 +28,7 @@ const LoginPage = () => {
     if (isSignUp) {
       // Sign up validation
       if (!studentForm.studentId || !studentForm.password || !studentForm.fullName || 
-          !studentForm.grade || !studentForm.class || !studentForm.gender || !studentForm.age || !studentForm.subject) {
+          !studentForm.grade || !studentForm.class || !studentForm.gender || !studentForm.age) {
         toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
         return;
       }
@@ -185,18 +185,6 @@ const LoginPage = () => {
                       onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} 
                       className="input-glassy" 
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Subject *</Label>
-                    <Select value={studentForm.subject} onValueChange={(value) => setStudentForm({...studentForm, subject: value})}>
-                      <SelectTrigger className="input-glassy"><SelectValue placeholder="Select subject" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="science">Science</SelectItem>
-                        <SelectItem value="mathematics">Mathematics</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
 
                   <div className="space-y-2">
