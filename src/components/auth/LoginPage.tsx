@@ -1,21 +1,25 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, UserCircle, ShieldCheck } from "lucide-react";
+import { GraduationCap, UserCircle, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ADMIN_ID = "Amb@ssador#Bench!2025";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
+  const defaultRole = searchParams.get("role") || "student";
+  const [activeTab, setActiveTab] = useState(defaultRole);
   const [isSignUp, setIsSignUp] = useState(true);
+  
   const [studentForm, setStudentForm] = useState({
     studentId: "", password: "", fullName: "", grade: "", class: "", gender: "", age: ""
   });
@@ -23,6 +27,12 @@ const LoginPage = () => {
   const [teacherForm, setTeacherForm] = useState({
     adminId: "", teacherId: "", password: "", fullName: "", subject: ""
   });
+
+  useEffect(() => {
+    if (searchParams.get("role")) {
+      setActiveTab(searchParams.get("role") || "student");
+    }
+  }, [searchParams]);
 
   // Validation helpers
   const validateStudentId = (id: string) => id.trim().length >= 3 && id.trim().length <= 20;
@@ -33,7 +43,6 @@ const LoginPage = () => {
     e.preventDefault();
     
     if (isSignUp) {
-      // Sign up validation
       if (!studentForm.studentId || !studentForm.password || !studentForm.fullName || 
           !studentForm.grade || !studentForm.class || !studentForm.gender || !studentForm.age) {
         toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
@@ -55,7 +64,6 @@ const LoginPage = () => {
         return;
       }
       
-      // Store student data
       const students = JSON.parse(localStorage.getItem("students") || "[]");
       if (students.find((s: any) => s.studentId === studentForm.studentId.trim())) {
         toast({ title: "Error", description: "Student ID already exists", variant: "destructive" });
@@ -77,7 +85,6 @@ const LoginPage = () => {
       setIsSignUp(false);
       setStudentForm({ ...studentForm, password: "" });
     } else {
-      // Login validation
       if (!studentForm.studentId || !studentForm.password) {
         toast({ title: "Missing Information", description: "Please enter Student ID and password", variant: "destructive" });
         return;
@@ -104,14 +111,12 @@ const LoginPage = () => {
     e.preventDefault();
     
     if (isSignUp) {
-      // Sign up validation - Admin ID required
       if (!teacherForm.adminId || !teacherForm.teacherId || !teacherForm.password || 
           !teacherForm.fullName || !teacherForm.subject) {
         toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
         return;
       }
       
-      // Validate Admin ID
       if (teacherForm.adminId !== ADMIN_ID) {
         toast({ title: "Invalid Admin ID", description: "Please contact administrator for valid Admin ID", variant: "destructive" });
         return;
@@ -132,7 +137,6 @@ const LoginPage = () => {
         return;
       }
       
-      // Store teacher data with their own password
       const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
       if (teachers.find((t: any) => t.teacherId === teacherForm.teacherId.trim())) {
         toast({ title: "Error", description: "Teacher ID already exists", variant: "destructive" });
@@ -141,7 +145,7 @@ const LoginPage = () => {
       
       const newTeacher = {
         teacherId: teacherForm.teacherId.trim(),
-        password: teacherForm.password, // Teacher's own password
+        password: teacherForm.password,
         fullName: teacherForm.fullName.trim(),
         subject: teacherForm.subject
       };
@@ -152,7 +156,6 @@ const LoginPage = () => {
       setIsSignUp(false);
       setTeacherForm({ adminId: "", teacherId: "", password: "", fullName: "", subject: "" });
     } else {
-      // Login validation - Uses teacher's own password
       if (!teacherForm.teacherId || !teacherForm.password) {
         toast({ title: "Missing Information", description: "Please enter Teacher ID and password", variant: "destructive" });
         return;
@@ -177,36 +180,46 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-primary/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl cloud-bubble p-8">
+      <Card className="w-full max-w-xl cloud-bubble p-8 animate-enter">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="text-sm">Back to home</span>
+        </button>
+
+        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">ASD Benchmark Assessment</h1>
-          <p className="text-muted-foreground">Professional PISA-Style Assessment Platform</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">PISA Practice Platform</h1>
+          <p className="text-muted-foreground">Sign in to continue</p>
         </div>
 
-        <Tabs defaultValue="student" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="student" className="flex items-center gap-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6 rounded-2xl p-1 bg-muted/50">
+            <TabsTrigger value="student" className="flex items-center gap-2 rounded-xl">
               <GraduationCap className="h-4 w-4" />Student
             </TabsTrigger>
-            <TabsTrigger value="teacher" className="flex items-center gap-2">
+            <TabsTrigger value="teacher" className="flex items-center gap-2 rounded-xl">
               <UserCircle className="h-4 w-4" />Teacher
             </TabsTrigger>
           </TabsList>
 
           {/* STUDENT TAB */}
           <TabsContent value="student">
-            <div className="mb-4 flex gap-2 justify-center">
+            <div className="mb-6 flex gap-2 justify-center">
               <Button 
                 variant={isSignUp ? "default" : "outline"} 
                 onClick={() => setIsSignUp(true)}
-                className="flex-1"
+                className="flex-1 rounded-xl"
               >
                 Sign Up
               </Button>
               <Button 
                 variant={!isSignUp ? "default" : "outline"} 
                 onClick={() => setIsSignUp(false)}
-                className="flex-1"
+                className="flex-1 rounded-xl"
               >
                 Login
               </Button>
@@ -214,7 +227,7 @@ const LoginPage = () => {
 
             <form onSubmit={handleStudentAuth} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="student-id">Student ID *</Label>
+                <Label htmlFor="student-id">Student ID</Label>
                 <Input 
                   id="student-id" 
                   placeholder="Enter student ID" 
@@ -226,7 +239,7 @@ const LoginPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="student-password">Password *</Label>
+                <Label htmlFor="student-password">Password</Label>
                 <Input 
                   id="student-password" 
                   type="password" 
@@ -240,7 +253,7 @@ const LoginPage = () => {
               {isSignUp && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name *</Label>
+                    <Label htmlFor="fullName">Full Name</Label>
                     <Input 
                       id="fullName" 
                       placeholder="Enter full name" 
@@ -253,7 +266,7 @@ const LoginPage = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="grade">Grade *</Label>
+                      <Label htmlFor="grade">Grade</Label>
                       <Input 
                         id="grade" 
                         placeholder="e.g., 10" 
@@ -264,7 +277,7 @@ const LoginPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="class">Class *</Label>
+                      <Label htmlFor="class">Class</Label>
                       <Input 
                         id="class" 
                         placeholder="e.g., A" 
@@ -277,13 +290,13 @@ const LoginPage = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Gender *</Label>
+                      <Label>Gender</Label>
                       <Select 
                         value={studentForm.gender} 
                         onValueChange={(value) => setStudentForm({...studentForm, gender: value})}
                       >
                         <SelectTrigger className="input-glassy">
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
@@ -293,11 +306,11 @@ const LoginPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="age">Age *</Label>
+                      <Label htmlFor="age">Age</Label>
                       <Input 
                         id="age" 
                         type="number" 
-                        placeholder="Enter age" 
+                        placeholder="Age" 
                         value={studentForm.age}
                         onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} 
                         className="input-glassy"
@@ -317,18 +330,18 @@ const LoginPage = () => {
 
           {/* TEACHER TAB */}
           <TabsContent value="teacher">
-            <div className="mb-4 flex gap-2 justify-center">
+            <div className="mb-6 flex gap-2 justify-center">
               <Button 
                 variant={isSignUp ? "default" : "outline"} 
                 onClick={() => setIsSignUp(true)}
-                className="flex-1"
+                className="flex-1 rounded-xl"
               >
                 Sign Up
               </Button>
               <Button 
                 variant={!isSignUp ? "default" : "outline"} 
                 onClick={() => setIsSignUp(false)}
-                className="flex-1"
+                className="flex-1 rounded-xl"
               >
                 Login
               </Button>
@@ -339,7 +352,7 @@ const LoginPage = () => {
                 <div className="space-y-2">
                   <Label htmlFor="admin-id" className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-primary" />
-                    Admin ID *
+                    Admin ID
                   </Label>
                   <Input 
                     id="admin-id" 
@@ -354,10 +367,10 @@ const LoginPage = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="teacher-id">Teacher ID *</Label>
+                <Label htmlFor="teacher-id">Teacher ID</Label>
                 <Input 
                   id="teacher-id" 
-                  placeholder="Create your Teacher ID" 
+                  placeholder={isSignUp ? "Create your Teacher ID" : "Enter Teacher ID"} 
                   value={teacherForm.teacherId}
                   onChange={(e) => setTeacherForm({...teacherForm, teacherId: e.target.value})} 
                   className="input-glassy" 
@@ -366,7 +379,7 @@ const LoginPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="teacher-password">Password *</Label>
+                <Label htmlFor="teacher-password">Password</Label>
                 <Input 
                   id="teacher-password" 
                   type="password" 
@@ -380,7 +393,7 @@ const LoginPage = () => {
               {isSignUp && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="teacher-name">Full Name *</Label>
+                    <Label htmlFor="teacher-name">Full Name</Label>
                     <Input 
                       id="teacher-name" 
                       placeholder="Enter your full name" 
@@ -392,7 +405,7 @@ const LoginPage = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Subject *</Label>
+                    <Label>Subject</Label>
                     <Select 
                       value={teacherForm.subject} 
                       onValueChange={(value) => setTeacherForm({...teacherForm, subject: value})}
@@ -411,7 +424,7 @@ const LoginPage = () => {
               )}
 
               <Button type="submit" className="w-full nav-btn-next mt-6">
-                {isSignUp ? "Sign Up" : "Login to Dashboard"}
+                {isSignUp ? "Sign Up" : "Login"}
               </Button>
             </form>
           </TabsContent>

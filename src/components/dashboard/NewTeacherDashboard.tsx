@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy } from "lucide-react";
+import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy, PlusCircle, FolderOpen, ChartLine, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+
+type ActiveSection = "home" | "create" | "tests" | "analytics" | "students";
 
 const NewTeacherDashboard = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const NewTeacherDashboard = () => {
   const [teacher, setTeacher] = useState<any>(null);
   const [tests, setTests] = useState<any[]>([]);
   const [allResults, setAllResults] = useState<any[]>([]);
+  const [activeSection, setActiveSection] = useState<ActiveSection>("home");
   
   // Upload form
   const [testTitle, setTestTitle] = useState("");
@@ -31,12 +33,10 @@ const NewTeacherDashboard = () => {
     const teacherData = JSON.parse(currentTeacher);
     setTeacher(teacherData);
 
-    // Load tests created by this teacher
     const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
     const teacherTests = allTests.filter((t: any) => t.teacherId === teacherData.teacherId);
     setTests(teacherTests);
 
-    // Load all test results
     const results = JSON.parse(localStorage.getItem("testResults") || "[]");
     const teacherResults = results.filter((r: any) => 
       teacherTests.some((t: any) => t.testCode === r.testCode)
@@ -52,7 +52,7 @@ const NewTeacherDashboard = () => {
   };
 
   const generateTestCode = (subject: string) => {
-    const prefix = subject === 'english' ? 'E' : subject === 'science' ? 'S' : 'M';
+    const prefix = subject === 'English' ? 'E' : subject === 'Science' ? 'S' : 'M';
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = prefix;
     for (let i = 0; i < 5; i++) {
@@ -89,7 +89,6 @@ const NewTeacherDashboard = () => {
       duration: 5000
     });
 
-    // Reset form and reload
     setTestTitle("");
     setTestSubject("");
     setTestDuration("60");
@@ -157,170 +156,114 @@ const NewTeacherDashboard = () => {
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--destructive))'];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-primary/10">
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Teacher Dashboard</h1>
-            <p className="text-muted-foreground">Welcome, {teacher.fullName}!</p>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="cloud-bubble p-6">
-            <div className="flex items-center gap-4">
-              <Upload className="h-10 w-10 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Tests Created</p>
-                <p className="text-3xl font-bold">{tests.length}</p>
+  // Render section content
+  const renderSection = () => {
+    switch (activeSection) {
+      case "create":
+        return (
+          <Card className="cloud-bubble p-8 max-w-xl mx-auto animate-fade-in">
+            <h3 className="text-xl font-semibold mb-2">Create New Test</h3>
+            <p className="text-muted-foreground text-sm mb-6">Fill in the details to generate a test code</p>
+            <form onSubmit={handleCreateTest} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="testTitle">Test Title</Label>
+                <Input
+                  id="testTitle"
+                  placeholder="e.g., Midterm Assessment"
+                  value={testTitle}
+                  onChange={(e) => setTestTitle(e.target.value)}
+                  className="input-glassy"
+                />
               </div>
-            </div>
-          </Card>
 
-          <Card className="cloud-bubble p-6">
-            <div className="flex items-center gap-4">
-              <Users className="h-10 w-10 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Students</p>
-                <p className="text-3xl font-bold">{studentCount}</p>
+              <div className="space-y-2">
+                <Label>Subject</Label>
+                <Select value={testSubject} onValueChange={setTestSubject}>
+                  <SelectTrigger className="input-glassy">
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="Science">Science</SelectItem>
+                    <SelectItem value="Mathematics">Mathematics</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          </Card>
 
-          <Card className="cloud-bubble p-6">
-            <div className="flex items-center gap-4">
-              <TrendingUp className="h-10 w-10 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Avg Score</p>
-                <p className="text-3xl font-bold">{avgScore}%</p>
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration (minutes)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  value={testDuration}
+                  onChange={(e) => setTestDuration(e.target.value)}
+                  className="input-glassy"
+                />
               </div>
-            </div>
+
+              <Button type="submit" className="w-full nav-btn-next">
+                Create Test
+              </Button>
+            </form>
           </Card>
+        );
 
-          <Card className="cloud-bubble p-6">
-            <div className="flex items-center gap-4">
-              <BarChart3 className="h-10 w-10 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Tests Taken</p>
-                <p className="text-3xl font-bold">{allResults.length}</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Main Tabs */}
-        <Tabs defaultValue="create" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="create">Create Test</TabsTrigger>
-            <TabsTrigger value="tests">My Tests</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="create" className="space-y-6">
-            <Card className="cloud-bubble p-6">
-              <h3 className="text-lg font-semibold mb-4">Create New Test</h3>
-              <form onSubmit={handleCreateTest} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="testTitle">Test Title *</Label>
-                  <Input
-                    id="testTitle"
-                    placeholder="e.g., Midterm Assessment"
-                    value={testTitle}
-                    onChange={(e) => setTestTitle(e.target.value)}
-                    className="input-glassy"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Subject *</Label>
-                  <Select value={testSubject} onValueChange={setTestSubject}>
-                    <SelectTrigger className="input-glassy">
-                      <SelectValue placeholder="Select subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="science">Science</SelectItem>
-                      <SelectItem value="mathematics">Mathematics</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (minutes) *</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    value={testDuration}
-                    onChange={(e) => setTestDuration(e.target.value)}
-                    className="input-glassy"
-                  />
-                </div>
-
-                <Button type="submit" className="w-full nav-btn-next">
-                  Create Test
-                </Button>
-              </form>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="tests">
-            <Card className="cloud-bubble p-6">
-              <h3 className="text-lg font-semibold mb-4">Your Tests</h3>
-              <div className="space-y-4">
-                {tests.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No tests created yet</p>
-                ) : (
-                  tests.map((test, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{test.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {test.subject} • {test.durationMinutes} min • {new Date(test.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-right mr-4">
-                          <p className="text-lg font-bold text-primary">{test.testCode}</p>
-                          <p className="text-xs text-muted-foreground">Test Code</p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyTestCode(test.testCode)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
+      case "tests":
+        return (
+          <Card className="cloud-bubble p-6 animate-fade-in">
+            <h3 className="text-xl font-semibold mb-2">My Tests</h3>
+            <p className="text-muted-foreground text-sm mb-6">All tests you've created</p>
+            <div className="space-y-4">
+              {tests.length === 0 ? (
+                <p className="text-muted-foreground text-center py-12">No tests created yet. Click "Create Test" to get started!</p>
+              ) : (
+                tests.map((test, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-5 bg-muted/30 rounded-2xl hover:bg-muted/50 transition-colors">
+                    <div className="flex-1">
+                      <p className="font-semibold text-foreground">{test.title}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {test.subject} • {test.durationMinutes} min • {new Date(test.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
-                  ))
-                )}
-              </div>
-            </Card>
-          </TabsContent>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right mr-2">
+                        <p className="text-xl font-bold text-primary font-mono">{test.testCode}</p>
+                        <p className="text-xs text-muted-foreground">Test Code</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => copyTestCode(test.testCode)}
+                        className="rounded-xl"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        );
 
-          <TabsContent value="analytics" className="space-y-6">
+      case "analytics":
+        return (
+          <div className="space-y-6 animate-fade-in">
             <Card className="cloud-bubble p-6">
-              <h3 className="text-lg font-semibold mb-4">Class Performance Trend</h3>
+              <h3 className="text-xl font-semibold mb-2">Performance Trend</h3>
+              <p className="text-muted-foreground text-sm mb-4">Overall student performance over time</p>
               {performanceTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={performanceTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="test" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="test" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '1rem' }} />
+                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={3} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                <p className="text-muted-foreground text-center py-12">No test data yet</p>
               )}
             </Card>
 
@@ -328,53 +271,44 @@ const NewTeacherDashboard = () => {
               <Card className="cloud-bubble p-6">
                 <h3 className="text-lg font-semibold mb-4">Gender Performance</h3>
                 {genderPerformance.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={genderPerformance}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="gender" />
-                      <YAxis domain={[0, 100]} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="gender" stroke="hsl(var(--muted-foreground))" />
+                      <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
                       <Tooltip />
-                      <Bar dataKey="avgScore" fill="hsl(var(--primary))" />
+                      <Bar dataKey="avgScore" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                  <p className="text-muted-foreground text-center py-8">No data yet</p>
                 )}
               </Card>
 
               <Card className="cloud-bubble p-6">
                 <h3 className="text-lg font-semibold mb-4">Class Performance</h3>
                 {classPerformance.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={classPerformance}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 100]} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                      <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
                       <Tooltip />
-                      <Bar dataKey="avgScore" fill="hsl(var(--secondary))" />
+                      <Bar dataKey="avgScore" fill="hsl(var(--secondary))" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                  <p className="text-muted-foreground text-center py-8">No data yet</p>
                 )}
               </Card>
 
               <Card className="cloud-bubble p-6">
                 <h3 className="text-lg font-semibold mb-4">Difficulty Distribution</h3>
                 {difficultyDistribution.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
-                      <Pie
-                        data={difficultyDistribution}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={(entry) => entry.name}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {difficultyDistribution.map((entry, index) => (
+                      <Pie data={difficultyDistribution} cx="50%" cy="50%" labelLine={false} label={(entry) => entry.name} outerRadius={80} fill="#8884d8" dataKey="value">
+                        {difficultyDistribution.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -382,63 +316,203 @@ const NewTeacherDashboard = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                  <p className="text-muted-foreground text-center py-8">No data yet</p>
                 )}
               </Card>
 
               <Card className="cloud-bubble p-6">
                 <h3 className="text-lg font-semibold mb-4">Score Distribution</h3>
                 {allResults.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={allResults.slice(0, 10)}>
-                      <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="studentId" hide />
-                      <YAxis domain={[0, 100]} />
+                      <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" />
                       <Tooltip />
-                      <Bar dataKey="score" fill="hsl(var(--accent))" />
+                      <Bar dataKey="score" fill="hsl(var(--accent))" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-muted-foreground text-center py-8">No test data yet</p>
+                  <p className="text-muted-foreground text-center py-8">No data yet</p>
                 )}
               </Card>
             </div>
-          </TabsContent>
+          </div>
+        );
 
-          <TabsContent value="students">
-            <Card className="cloud-bubble p-6">
-              <h3 className="text-lg font-semibold mb-4">Individual Student Performance</h3>
-              <div className="space-y-4">
-                {allResults.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No student results yet</p>
-                ) : (
-                  allResults.map((result, idx) => {
-                    const student = students.find((s: any) => s.studentId === result.studentId);
-                    return (
-                      <div key={idx} className="flex justify-between items-center p-4 bg-background/50 rounded-lg">
-                        <div>
-                          <p className="font-medium">{student?.fullName || 'Unknown Student'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            ID: {result.studentId} • Grade {student?.grade}-{student?.class} • {student?.gender} • {result.difficultyLevel}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Test: {result.testTitle} • {new Date(result.completedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-primary">{result.score}%</p>
-                          <p className="text-xs text-muted-foreground">
-                            {Math.floor(result.timeSpent / 60)} min
-                          </p>
-                        </div>
+      case "students":
+        return (
+          <Card className="cloud-bubble p-6 animate-fade-in">
+            <h3 className="text-xl font-semibold mb-2">Student Results</h3>
+            <p className="text-muted-foreground text-sm mb-6">Individual student performance</p>
+            <div className="space-y-4">
+              {allResults.length === 0 ? (
+                <p className="text-muted-foreground text-center py-12">No student results yet. Share your test codes with students!</p>
+              ) : (
+                allResults.map((result, idx) => {
+                  const student = students.find((s: any) => s.studentId === result.studentId);
+                  return (
+                    <div key={idx} className="flex justify-between items-center p-5 bg-muted/30 rounded-2xl hover:bg-muted/50 transition-colors">
+                      <div>
+                        <p className="font-semibold text-foreground">{student?.fullName || 'Unknown Student'}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          ID: {result.studentId} • Grade {student?.grade}-{student?.class} • {student?.gender}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Test: {result.testTitle} • {result.difficultyLevel} • {new Date(result.completedAt).toLocaleDateString()}
+                        </p>
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                      <div className="text-right">
+                        <p className="text-3xl font-bold text-primary">{result.score}%</p>
+                        <p className="text-xs text-muted-foreground">
+                          {Math.floor(result.timeSpent / 60)} min
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </Card>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-primary/10">
+      <div className="container mx-auto p-6 max-w-6xl">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              {activeSection === "home" ? "Teacher Dashboard" : (
+                activeSection === "create" ? "Create Test" :
+                activeSection === "tests" ? "My Tests" :
+                activeSection === "analytics" ? "Analytics" : "Students"
+              )}
+            </h1>
+            <p className="text-muted-foreground">Welcome, {teacher.fullName}!</p>
+          </div>
+          <Button variant="outline" onClick={handleLogout} className="rounded-xl">
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+
+        {/* Back button when in a section */}
+        {activeSection !== "home" && (
+          <button
+            onClick={() => setActiveSection("home")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm">Back to Dashboard</span>
+          </button>
+        )}
+
+        {activeSection === "home" ? (
+          <>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+              <Card className="cloud-bubble p-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Upload className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tests Created</p>
+                    <p className="text-2xl font-bold">{tests.length}</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="cloud-bubble p-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <Users className="h-5 w-5 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Students</p>
+                    <p className="text-2xl font-bold">{studentCount}</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="cloud-bubble p-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Avg Score</p>
+                    <p className="text-2xl font-bold">{avgScore}%</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="cloud-bubble p-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tests Taken</p>
+                    <p className="text-2xl font-bold">{allResults.length}</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Navigation Bubbles */}
+            <h2 className="text-xl font-semibold mb-6">Quick Access</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <button onClick={() => setActiveSection("create")} className="nav-bubble">
+                <div className="nav-bubble-icon">
+                  <PlusCircle className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Create Test</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Generate new test</p>
+                </div>
+              </button>
+
+              <button onClick={() => setActiveSection("tests")} className="nav-bubble">
+                <div className="nav-bubble-icon">
+                  <FolderOpen className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">My Tests</h3>
+                  <p className="text-sm text-muted-foreground mt-1">View & manage</p>
+                </div>
+              </button>
+
+              <button onClick={() => setActiveSection("analytics")} className="nav-bubble">
+                <div className="nav-bubble-icon">
+                  <ChartLine className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Analytics</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Performance data</p>
+                </div>
+              </button>
+
+              <button onClick={() => setActiveSection("students")} className="nav-bubble">
+                <div className="nav-bubble-icon">
+                  <Users className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Students</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Individual results</p>
+                </div>
+              </button>
+            </div>
+          </>
+        ) : (
+          renderSection()
+        )}
       </div>
     </div>
   );

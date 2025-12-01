@@ -22,7 +22,7 @@ const AssessmentInterface = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [timeRemaining, setTimeRemaining] = useState(3600); // 60 minutes
+  const [timeRemaining, setTimeRemaining] = useState(3600);
   const [studentData, setStudentData] = useState<any>(null);
   const [assignedLevel, setAssignedLevel] = useState<"easy" | "medium" | "hard" | null>(null);
   const [practiceComplete, setPracticeComplete] = useState(false);
@@ -36,7 +36,6 @@ const AssessmentInterface = () => {
     }
     setStudentData(JSON.parse(data));
 
-    // Timer countdown
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
@@ -51,7 +50,7 @@ const AssessmentInterface = () => {
     return () => clearInterval(timer);
   }, [navigate]);
 
-  // Sample questions - In real app, these would come from database/PDF extraction
+  // Sample questions
   const practiceQuestions: Question[] = [
     {
       id: "p1",
@@ -59,7 +58,7 @@ const AssessmentInterface = () => {
       isPractice: true,
       difficulty: "medium",
       title: "Practice Question 1",
-      passage: "Climate change refers to long-term shifts in temperatures and weather patterns. These shifts may be natural, such as through variations in the solar cycle. But since the 1800s, human activities have been the main driver of climate change, primarily due to burning fossil fuels like coal, oil and gas.",
+      passage: "Climate change refers to long-term shifts in temperatures and weather patterns. These shifts may be natural, such as through variations in the solar cycle. But since the 1800s, human activities have been the main driver of climate change, primarily due to burning fossil fuels like coal, oil and gas.\n\nBurning fossil fuels generates greenhouse gas emissions that act like a blanket wrapped around the Earth, trapping the sun's heat and raising temperatures. The main greenhouse gases that are causing climate change include carbon dioxide and methane. These come from using gasoline for driving a car or coal for heating a building, for example.",
       question: "According to the passage, what has been the main driver of climate change since the 1800s?",
       options: [
         "Natural variations in the solar cycle",
@@ -75,7 +74,7 @@ const AssessmentInterface = () => {
       isPractice: true,
       difficulty: "medium",
       title: "Practice Question 2",
-      passage: "Photosynthesis is a process used by plants to convert light energy into chemical energy. During this process, plants take in carbon dioxide from the air and water from the soil. Using sunlight as energy, they convert these into glucose (a type of sugar) and oxygen. The oxygen is released back into the atmosphere.",
+      passage: "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy that can later be released to fuel the organism's activities. This chemical energy is stored in carbohydrate molecules, such as sugars, which are synthesized from carbon dioxide and water.\n\nDuring photosynthesis, plants take in carbon dioxide from the air through tiny pores in their leaves called stomata. They also absorb water from the soil through their roots. Using sunlight as energy, they convert these raw materials into glucose and oxygen. The oxygen is released back into the atmosphere as a byproduct.",
       question: "What do plants release into the atmosphere during photosynthesis?",
       options: [
         "Carbon dioxide",
@@ -91,7 +90,7 @@ const AssessmentInterface = () => {
       isPractice: true,
       difficulty: "medium",
       title: "Practice Question 3",
-      passage: "The water cycle describes how water evaporates from the surface of the earth, rises into the atmosphere, cools and condenses into rain or snow in clouds, and falls again to the surface as precipitation. The water that falls to Earth as precipitation can flow into rivers, lakes, and oceans, or it can seep into the ground to become groundwater.",
+      passage: "The water cycle, also known as the hydrological cycle, describes the continuous movement of water on, above, and below the surface of the Earth. Water evaporates from the surface of oceans, lakes, and rivers, rising into the atmosphere where cooler temperatures cause it to condense into clouds.\n\nWhen the water droplets in clouds combine and grow heavy enough, they fall back to Earth as precipitation—rain, snow, sleet, or hail. This precipitation can flow across the land into rivers, lakes, and eventually the oceans, or it can seep into the ground to become groundwater.",
       question: "What happens to water after it evaporates from the Earth's surface?",
       options: [
         "It immediately falls as rain",
@@ -111,7 +110,7 @@ const AssessmentInterface = () => {
         isPractice: false,
         difficulty: "easy",
         title: "Reading Comprehension",
-        passage: "The library is a place where books are kept for people to read or borrow. Libraries have existed for thousands of years. Ancient libraries stored information on clay tablets and papyrus scrolls. Today's libraries contain books, magazines, newspapers, and digital resources like computers and e-books. Many libraries also offer programs such as reading clubs, homework help, and community events.",
+        passage: "The library is a place where books are kept for people to read or borrow. Libraries have existed for thousands of years, serving as centers of knowledge and learning. Ancient libraries, like the famous Library of Alexandria, stored information on clay tablets and papyrus scrolls.\n\nToday's modern libraries have evolved to contain not just books, but also magazines, newspapers, and digital resources like computers and e-books. Many libraries also offer valuable programs such as reading clubs for children, homework help sessions, and community events that bring people together.",
         question: "What is the main purpose of a library?",
         options: [
           "To sell books to people",
@@ -127,7 +126,7 @@ const AssessmentInterface = () => {
         isPractice: false,
         difficulty: "easy",
         title: "Reading Comprehension",
-        passage: "Bees are important insects that help plants grow. They do this through a process called pollination. When a bee visits a flower to drink nectar, pollen sticks to its body. As the bee moves from flower to flower, it transfers this pollen, helping plants produce seeds and fruit. Without bees, many plants would not be able to reproduce.",
+        passage: "Bees are remarkable insects that play a crucial role in helping plants grow and reproduce. They accomplish this through a process called pollination, which is essential for the production of many fruits and vegetables that humans eat.\n\nWhen a bee visits a flower to drink its sweet nectar, tiny grains of pollen stick to the bee's fuzzy body. As the bee moves from flower to flower in search of more nectar, it transfers this pollen, allowing plants to produce seeds and fruit. Without bees and other pollinators, many of our favorite foods would not exist.",
         question: "How do bees help plants grow?",
         options: [
           "By eating the leaves",
@@ -145,7 +144,7 @@ const AssessmentInterface = () => {
         isPractice: false,
         difficulty: "medium",
         title: "Critical Reading",
-        passage: "Artificial Intelligence (AI) is transforming industries worldwide. From healthcare to finance, AI systems can analyze vast amounts of data faster than humans. However, this technology also raises ethical concerns. Privacy issues arise when AI systems collect personal data. There are also fears about job displacement as machines take over tasks previously performed by humans. Despite these concerns, many experts believe that AI will ultimately benefit society if developed responsibly.",
+        passage: "Artificial Intelligence (AI) is rapidly transforming industries worldwide, from healthcare diagnostics to financial analysis. AI systems can analyze vast amounts of data faster and often more accurately than humans, leading to breakthroughs in medical research and business optimization.\n\nHowever, this powerful technology also raises significant ethical concerns that society must address. Privacy issues arise when AI systems collect and process personal data without adequate consent or transparency. There are also legitimate fears about job displacement as machines increasingly take over tasks previously performed by humans. Despite these challenges, many experts believe that AI will ultimately benefit society—if developed and deployed responsibly.",
         question: "What is one concern mentioned about AI in the passage?",
         options: [
           "AI cannot analyze data as well as humans",
@@ -163,7 +162,7 @@ const AssessmentInterface = () => {
         isPractice: false,
         difficulty: "hard",
         title: "Advanced Analysis",
-        passage: "Quantum computing represents a paradigm shift in computational capability. Unlike classical computers that process information in binary bits (0s and 1s), quantum computers use quantum bits or 'qubits' that can exist in multiple states simultaneously through superposition. This property, combined with quantum entanglement, allows quantum computers to solve certain problems exponentially faster than classical computers. However, quantum systems are extremely fragile and require near-absolute zero temperatures to function, making them impractical for everyday use currently.",
+        passage: "Quantum computing represents a fundamental paradigm shift in computational capability that could revolutionize fields from cryptography to drug discovery. Unlike classical computers that process information in binary bits—which exist as either 0 or 1—quantum computers use quantum bits, or 'qubits,' that can exist in multiple states simultaneously through a phenomenon called superposition.\n\nThis remarkable property, combined with quantum entanglement—where qubits become interconnected and the state of one instantly influences another regardless of distance—allows quantum computers to solve certain problems exponentially faster than any classical computer. However, quantum systems are extremely fragile and require temperatures near absolute zero to function, making them currently impractical for everyday use.",
         question: "What makes quantum computers potentially more powerful than classical computers?",
         options: [
           "They operate at room temperature",
@@ -190,7 +189,6 @@ const AssessmentInterface = () => {
     const updatedAnswers = { ...answers, [currentQuestion]: answer };
     setAnswers(updatedAnswers);
 
-    // Check if practice phase is complete
     if (!practiceComplete && currentQuestion === practiceQuestions.length - 1) {
       const practiceScore = calculatePracticeScore(updatedAnswers);
       assignDifficultyLevel(practiceScore);
@@ -232,7 +230,6 @@ const AssessmentInterface = () => {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(answers[currentQuestion + 1] || "");
     } else if (!practiceComplete) {
-      // Moving from practice to main questions
       setCurrentQuestion(0);
       setSelectedAnswer("");
     } else {
@@ -248,7 +245,6 @@ const AssessmentInterface = () => {
   };
 
   const handleSubmit = () => {
-    // Calculate score
     const questions = getCurrentQuestions();
     let correct = 0;
     questions.forEach((q, idx) => {
@@ -258,14 +254,13 @@ const AssessmentInterface = () => {
     });
     const score = Math.round((correct / questions.length) * 100);
 
-    // Get current test info
     const currentTest = JSON.parse(localStorage.getItem("currentTest") || "{}");
     
     const result = {
       studentId: studentData.studentId,
       testCode: currentTest.testCode || "DEMO",
       testTitle: currentTest.title || "Demo Test",
-      subject: studentData.subject,
+      subject: currentTest.subject || "General",
       score,
       difficultyLevel: assignedLevel,
       timeSpent: 3600 - timeRemaining,
@@ -274,12 +269,10 @@ const AssessmentInterface = () => {
       markedForReview: Array.from(markedForReview)
     };
     
-    // Save to test results
     const testResults = JSON.parse(localStorage.getItem("testResults") || "[]");
     testResults.push(result);
     localStorage.setItem("testResults", JSON.stringify(testResults));
     
-    // Clear current test
     localStorage.removeItem("currentTest");
     
     toast({
@@ -297,99 +290,115 @@ const AssessmentInterface = () => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const toggleMarkForReview = () => {
+    const newMarked = new Set(markedForReview);
+    if (newMarked.has(currentQuestion)) {
+      newMarked.delete(currentQuestion);
+      toast({ title: "Unmarked", description: "Question removed from review list" });
+    } else {
+      newMarked.add(currentQuestion);
+      toast({ title: "Marked for Review", description: "You can revisit this question later" });
+    }
+    setMarkedForReview(newMarked);
+  };
+
   if (!studentData) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-primary/5">
-      {/* Top Cloud Bubble - Header */}
+      {/* Top Cloud Bubble - Global Header */}
       <div className="sticky top-4 z-50 mx-4 mt-4">
         <div className="cloud-bubble-top px-6 py-4">
           <div className="flex items-center justify-between">
+            {/* Left: Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
+              <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md">
+                <span className="text-lg font-bold text-primary-foreground">P</span>
               </div>
               <div>
-                <h2 className="font-semibold text-foreground">ASD Benchmark Assessment</h2>
+                <h2 className="font-semibold text-foreground">PISA Practice Platform</h2>
                 <p className="text-xs text-muted-foreground">
-                  {practiceComplete ? `${assignedLevel?.toUpperCase()} Level` : "Practice Questions"}
+                  {practiceComplete ? `${assignedLevel?.toUpperCase()} Level` : "Practice Round"}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
-              {/* Timer */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/60 rounded-full">
-                <Clock className="h-4 w-4 text-primary" />
-                <span className="font-mono font-semibold text-foreground">{formatTime(timeRemaining)}</span>
-              </div>
+            {/* Center: Timer */}
+            <div className="flex items-center gap-2 px-5 py-2.5 bg-card/80 rounded-full shadow-sm border border-border/50">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="font-mono font-bold text-lg text-foreground">{formatTime(timeRemaining)}</span>
+            </div>
 
-              {/* Question Navigation Bubbles */}
-              <div className="flex items-center gap-2">
-                {questions.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setCurrentQuestion(idx);
-                      setSelectedAnswer(answers[idx] || "");
-                    }}
-                    className={`question-nav-bubble relative ${
-                      idx === currentQuestion ? "active" : answers[idx] ? "answered" : "unanswered"
-                    }`}
-                  >
-                    {idx + 1}
-                    {markedForReview.has(idx) && (
-                      <Flag className="h-3 w-3 absolute -top-1 -right-1 fill-yellow-500 text-yellow-500" />
-                    )}
-                  </button>
-                ))}
-              </div>
+            {/* Right: Question Navigation Bubbles */}
+            <div className="flex items-center gap-2">
+              {questions.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setCurrentQuestion(idx);
+                    setSelectedAnswer(answers[idx] || "");
+                  }}
+                  className={`question-nav-bubble relative ${
+                    idx === currentQuestion ? "active" : answers[idx] ? "answered" : "unanswered"
+                  }`}
+                >
+                  {idx + 1}
+                  {markedForReview.has(idx) && (
+                    <Flag className="h-3 w-3 absolute -top-1 -right-1 fill-warning text-warning" />
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content - Middle Cloud Bubble */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="cloud-bubble-main p-6">
-          <div className="grid lg:grid-cols-5 gap-6 min-h-[calc(100vh-200px)]">
+          {/* 60/40 Split Layout */}
+          <div className="grid lg:grid-cols-5 gap-8 min-h-[calc(100vh-220px)]">
+            
             {/* Left Panel - Reading Passage (60%) */}
             <div className="lg:col-span-3">
-              <div className="passage-bubble">
-                <div className="mb-4 pb-4 border-b border-border">
-                  <h2 className="text-xl font-semibold text-foreground">Reading Passage</h2>
-                  <p className="text-sm text-muted-foreground mt-1">{questions[currentQuestion].title}</p>
+              <div className="passage-bubble h-full">
+                <div className="mb-6 pb-4 border-b border-border/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    <h2 className="text-xl font-semibold text-foreground font-poppins">Reading Passage</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{questions[currentQuestion].title}</p>
                 </div>
                 
-                <div className="prose prose-sm max-w-none">
+                {/* Passage Text with Serif Font */}
+                <div className="passage-text">
                   {questions[currentQuestion].passage.split('\n\n').map((paragraph, idx) => (
-                    <p key={idx} className="mb-4 text-foreground leading-relaxed">
-                      {paragraph}
-                    </p>
+                    <p key={idx}>{paragraph}</p>
                   ))}
                 </div>
               </div>
             </div>
 
             {/* Right Panel - Question & Answers (40%) */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="question-bubble">
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              <div className="question-bubble flex-1">
                 <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-4 py-1.5 rounded-full">
                       Question {currentQuestion + 1} of {questions.length}
                     </span>
                     {practiceComplete && (
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {questions[currentQuestion].difficulty.toUpperCase()}
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {questions[currentQuestion].difficulty}
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mt-4">
+                  <h3 className="text-lg font-semibold text-foreground leading-relaxed">
                     {questions[currentQuestion].question}
                   </h3>
                 </div>
 
+                {/* Answer Options */}
                 <div className="space-y-3">
                   {questions[currentQuestion].options?.map((option, idx) => (
                     <label
@@ -404,12 +413,12 @@ const AssessmentInterface = () => {
                         onChange={() => handleAnswerSelect(option)}
                         className="sr-only"
                       />
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-muted-foreground flex items-center justify-center transition-colors">
+                      <div className="flex-shrink-0 w-7 h-7 rounded-full border-2 border-muted-foreground/50 flex items-center justify-center transition-all">
                         {selectedAnswer === option && (
-                          <div className="w-3.5 h-3.5 rounded-full bg-primary" />
+                          <div className="w-4 h-4 rounded-full bg-primary" />
                         )}
                       </div>
-                      <span className="text-sm text-foreground leading-snug">{option}</span>
+                      <span className="text-sm text-foreground leading-relaxed">{option}</span>
                     </label>
                   ))}
                 </div>
@@ -418,51 +427,30 @@ const AssessmentInterface = () => {
               {/* Mark for Review */}
               <Button
                 variant="outline"
-                onClick={() => {
-                  const newMarked = new Set(markedForReview);
-                  if (newMarked.has(currentQuestion)) {
-                    newMarked.delete(currentQuestion);
-                    toast({ title: "Unmarked", description: "Question removed from review list" });
-                  } else {
-                    newMarked.add(currentQuestion);
-                    toast({ title: "Marked for Review", description: "Question added to review list" });
-                  }
-                  setMarkedForReview(newMarked);
-                }}
-                className="w-full"
+                onClick={toggleMarkForReview}
+                className={`w-full rounded-xl ${markedForReview.has(currentQuestion) ? 'border-warning text-warning' : ''}`}
               >
-                <Flag className={`h-4 w-4 mr-2 ${markedForReview.has(currentQuestion) ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                <Flag className={`h-4 w-4 mr-2 ${markedForReview.has(currentQuestion) ? 'fill-warning' : ''}`} />
                 {markedForReview.has(currentQuestion) ? 'Marked for Review' : 'Mark for Review'}
               </Button>
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between items-center gap-4">
+              <div className="flex gap-4">
                 <Button
                   onClick={handlePrevQuestion}
                   disabled={currentQuestion === 0}
                   className="nav-btn-prev flex-1"
                 >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  <ChevronLeft className="h-5 w-5 mr-2" />
                   Previous
                 </Button>
-                
-                {currentQuestion === questions.length - 1 ? (
-                  <Button
-                    onClick={practiceComplete ? handleSubmit : handleNextQuestion}
-                    className="nav-btn-next flex-1"
-                  >
-                    {practiceComplete ? "Submit" : "Continue"}
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNextQuestion}
-                    className="nav-btn-next flex-1"
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                )}
+                <Button
+                  onClick={handleNextQuestion}
+                  className="nav-btn-next flex-1"
+                >
+                  {currentQuestion === questions.length - 1 && practiceComplete ? 'Submit' : 'Next'}
+                  <ChevronRight className="h-5 w-5 ml-2" />
+                </Button>
               </div>
             </div>
           </div>
