@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, UserCircle } from "lucide-react";
+import { GraduationCap, UserCircle, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const ADMIN_ID = "Amb@ssador#Bench!2025";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -19,8 +21,13 @@ const LoginPage = () => {
   });
 
   const [teacherForm, setTeacherForm] = useState({
-    teacherId: "", password: "", fullName: "", subject: ""
+    adminId: "", teacherId: "", password: "", fullName: "", subject: ""
   });
+
+  // Validation helpers
+  const validateStudentId = (id: string) => id.trim().length >= 3 && id.trim().length <= 20;
+  const validatePassword = (pass: string) => pass.length >= 4;
+  const validateName = (name: string) => name.trim().length >= 2 && name.trim().length <= 50;
 
   const handleStudentAuth = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,18 +39,43 @@ const LoginPage = () => {
         toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
         return;
       }
+
+      if (!validateStudentId(studentForm.studentId)) {
+        toast({ title: "Invalid Student ID", description: "Student ID must be 3-20 characters", variant: "destructive" });
+        return;
+      }
+
+      if (!validatePassword(studentForm.password)) {
+        toast({ title: "Weak Password", description: "Password must be at least 4 characters", variant: "destructive" });
+        return;
+      }
+
+      if (!validateName(studentForm.fullName)) {
+        toast({ title: "Invalid Name", description: "Name must be 2-50 characters", variant: "destructive" });
+        return;
+      }
       
       // Store student data
       const students = JSON.parse(localStorage.getItem("students") || "[]");
-      if (students.find((s: any) => s.studentId === studentForm.studentId)) {
+      if (students.find((s: any) => s.studentId === studentForm.studentId.trim())) {
         toast({ title: "Error", description: "Student ID already exists", variant: "destructive" });
         return;
       }
       
-      students.push(studentForm);
+      const sanitizedStudent = {
+        ...studentForm,
+        studentId: studentForm.studentId.trim(),
+        fullName: studentForm.fullName.trim(),
+        grade: studentForm.grade.trim(),
+        class: studentForm.class.trim(),
+        age: studentForm.age.trim()
+      };
+      
+      students.push(sanitizedStudent);
       localStorage.setItem("students", JSON.stringify(students));
       toast({ title: "Success!", description: "Account created! Please login." });
       setIsSignUp(false);
+      setStudentForm({ ...studentForm, password: "" });
     } else {
       // Login validation
       if (!studentForm.studentId || !studentForm.password) {
@@ -52,7 +84,9 @@ const LoginPage = () => {
       }
       
       const students = JSON.parse(localStorage.getItem("students") || "[]");
-      const student = students.find((s: any) => s.studentId === studentForm.studentId && s.password === studentForm.password);
+      const student = students.find((s: any) => 
+        s.studentId === studentForm.studentId.trim() && s.password === studentForm.password
+      );
       
       if (!student) {
         toast({ title: "Error", description: "Invalid Student ID or password", variant: "destructive" });
@@ -70,37 +104,64 @@ const LoginPage = () => {
     e.preventDefault();
     
     if (isSignUp) {
-      // Sign up validation with admin password
-      if (!teacherForm.teacherId || !teacherForm.password || !teacherForm.fullName || !teacherForm.subject) {
+      // Sign up validation - Admin ID required
+      if (!teacherForm.adminId || !teacherForm.teacherId || !teacherForm.password || 
+          !teacherForm.fullName || !teacherForm.subject) {
         toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
         return;
       }
       
-      if (teacherForm.password !== "Amb@ssador#Bench!") {
-        toast({ title: "Invalid Admin Password", description: "Please check your password", variant: "destructive" });
+      // Validate Admin ID
+      if (teacherForm.adminId !== ADMIN_ID) {
+        toast({ title: "Invalid Admin ID", description: "Please contact administrator for valid Admin ID", variant: "destructive" });
+        return;
+      }
+
+      if (!validateStudentId(teacherForm.teacherId)) {
+        toast({ title: "Invalid Teacher ID", description: "Teacher ID must be 3-20 characters", variant: "destructive" });
+        return;
+      }
+
+      if (!validatePassword(teacherForm.password)) {
+        toast({ title: "Weak Password", description: "Password must be at least 4 characters", variant: "destructive" });
+        return;
+      }
+
+      if (!validateName(teacherForm.fullName)) {
+        toast({ title: "Invalid Name", description: "Name must be 2-50 characters", variant: "destructive" });
         return;
       }
       
-      // Store teacher data
+      // Store teacher data with their own password
       const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
-      if (teachers.find((t: any) => t.teacherId === teacherForm.teacherId)) {
+      if (teachers.find((t: any) => t.teacherId === teacherForm.teacherId.trim())) {
         toast({ title: "Error", description: "Teacher ID already exists", variant: "destructive" });
         return;
       }
       
-      teachers.push(teacherForm);
+      const newTeacher = {
+        teacherId: teacherForm.teacherId.trim(),
+        password: teacherForm.password, // Teacher's own password
+        fullName: teacherForm.fullName.trim(),
+        subject: teacherForm.subject
+      };
+      
+      teachers.push(newTeacher);
       localStorage.setItem("teachers", JSON.stringify(teachers));
-      toast({ title: "Success!", description: "Account created! Please login." });
+      toast({ title: "Success!", description: "Account created! Please login with your password." });
       setIsSignUp(false);
+      setTeacherForm({ adminId: "", teacherId: "", password: "", fullName: "", subject: "" });
     } else {
-      // Login validation
+      // Login validation - Uses teacher's own password
       if (!teacherForm.teacherId || !teacherForm.password) {
         toast({ title: "Missing Information", description: "Please enter Teacher ID and password", variant: "destructive" });
         return;
       }
       
       const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
-      const teacher = teachers.find((t: any) => t.teacherId === teacherForm.teacherId && t.password === teacherForm.password);
+      const teacher = teachers.find((t: any) => 
+        t.teacherId === teacherForm.teacherId.trim() && t.password === teacherForm.password
+      );
       
       if (!teacher) {
         toast({ title: "Error", description: "Invalid Teacher ID or password", variant: "destructive" });
@@ -132,6 +193,7 @@ const LoginPage = () => {
             </TabsTrigger>
           </TabsList>
 
+          {/* STUDENT TAB */}
           <TabsContent value="student">
             <div className="mb-4 flex gap-2 justify-center">
               <Button 
@@ -159,6 +221,7 @@ const LoginPage = () => {
                   value={studentForm.studentId}
                   onChange={(e) => setStudentForm({...studentForm, studentId: e.target.value})} 
                   className="input-glassy" 
+                  maxLength={20}
                 />
               </div>
 
@@ -184,52 +247,64 @@ const LoginPage = () => {
                       value={studentForm.fullName}
                       onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} 
                       className="input-glassy" 
+                      maxLength={50}
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="grade">Grade *</Label>
-                    <Input 
-                      id="grade" 
-                      placeholder="e.g., 10" 
-                      value={studentForm.grade}
-                      onChange={(e) => setStudentForm({...studentForm, grade: e.target.value})} 
-                      className="input-glassy" 
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="grade">Grade *</Label>
+                      <Input 
+                        id="grade" 
+                        placeholder="e.g., 10" 
+                        value={studentForm.grade}
+                        onChange={(e) => setStudentForm({...studentForm, grade: e.target.value})} 
+                        className="input-glassy" 
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="class">Class *</Label>
+                      <Input 
+                        id="class" 
+                        placeholder="e.g., A" 
+                        value={studentForm.class}
+                        onChange={(e) => setStudentForm({...studentForm, class: e.target.value})} 
+                        className="input-glassy" 
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="class">Class *</Label>
-                    <Input 
-                      id="class" 
-                      placeholder="e.g., A" 
-                      value={studentForm.class}
-                      onChange={(e) => setStudentForm({...studentForm, class: e.target.value})} 
-                      className="input-glassy" 
-                    />
-                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Gender *</Label>
+                      <Select 
+                        value={studentForm.gender} 
+                        onValueChange={(value) => setStudentForm({...studentForm, gender: value})}
+                      >
+                        <SelectTrigger className="input-glassy">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Male">Male</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender *</Label>
-                    <Input 
-                      id="gender" 
-                      placeholder="e.g., Male, Female, Other" 
-                      value={studentForm.gender}
-                      onChange={(e) => setStudentForm({...studentForm, gender: e.target.value})} 
-                      className="input-glassy" 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="age">Age *</Label>
-                    <Input 
-                      id="age" 
-                      type="number" 
-                      placeholder="Enter age" 
-                      value={studentForm.age}
-                      onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} 
-                      className="input-glassy" 
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="age">Age *</Label>
+                      <Input 
+                        id="age" 
+                        type="number" 
+                        placeholder="Enter age" 
+                        value={studentForm.age}
+                        onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} 
+                        className="input-glassy"
+                        min={5}
+                        max={25}
+                      />
+                    </div>
                   </div>
                 </>
               )}
@@ -240,6 +315,7 @@ const LoginPage = () => {
             </form>
           </TabsContent>
 
+          {/* TEACHER TAB */}
           <TabsContent value="teacher">
             <div className="mb-4 flex gap-2 justify-center">
               <Button 
@@ -259,23 +335,42 @@ const LoginPage = () => {
             </div>
 
             <form onSubmit={handleTeacherAuth} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="admin-id" className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Admin ID *
+                  </Label>
+                  <Input 
+                    id="admin-id" 
+                    type="password"
+                    placeholder="Enter Admin ID to verify" 
+                    value={teacherForm.adminId}
+                    onChange={(e) => setTeacherForm({...teacherForm, adminId: e.target.value})} 
+                    className="input-glassy" 
+                  />
+                  <p className="text-xs text-muted-foreground">Contact administrator for Admin ID</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="teacher-id">Teacher ID *</Label>
                 <Input 
                   id="teacher-id" 
-                  placeholder="Enter teacher ID" 
+                  placeholder="Create your Teacher ID" 
                   value={teacherForm.teacherId}
                   onChange={(e) => setTeacherForm({...teacherForm, teacherId: e.target.value})} 
                   className="input-glassy" 
+                  maxLength={20}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="teacher-password">{isSignUp ? "Admin Password" : "Password"} *</Label>
+                <Label htmlFor="teacher-password">Password *</Label>
                 <Input 
                   id="teacher-password" 
                   type="password" 
-                  placeholder={isSignUp ? "Enter admin password: Amb@ssador#Bench!" : "Enter password"} 
+                  placeholder={isSignUp ? "Create your password" : "Enter your password"} 
                   value={teacherForm.password}
                   onChange={(e) => setTeacherForm({...teacherForm, password: e.target.value})} 
                   className="input-glassy" 
@@ -288,21 +383,27 @@ const LoginPage = () => {
                     <Label htmlFor="teacher-name">Full Name *</Label>
                     <Input 
                       id="teacher-name" 
-                      placeholder="Enter your name" 
+                      placeholder="Enter your full name" 
                       value={teacherForm.fullName}
                       onChange={(e) => setTeacherForm({...teacherForm, fullName: e.target.value})} 
                       className="input-glassy" 
+                      maxLength={50}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label>Subject *</Label>
-                    <Select value={teacherForm.subject} onValueChange={(value) => setTeacherForm({...teacherForm, subject: value})}>
-                      <SelectTrigger className="input-glassy"><SelectValue placeholder="Select subject" /></SelectTrigger>
+                    <Select 
+                      value={teacherForm.subject} 
+                      onValueChange={(value) => setTeacherForm({...teacherForm, subject: value})}
+                    >
+                      <SelectTrigger className="input-glassy">
+                        <SelectValue placeholder="Select subject" />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="science">Science</SelectItem>
-                        <SelectItem value="mathematics">Mathematics</SelectItem>
+                        <SelectItem value="Science">Science</SelectItem>
+                        <SelectItem value="Mathematics">Mathematics</SelectItem>
+                        <SelectItem value="English">English</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
