@@ -41,13 +41,14 @@ export const QuestionBuilder = ({ testId, onQuestionsChange }: QuestionBuilderPr
     loadQuestions();
   }, [testId]);
 
-  const loadQuestions = async () => {
-    const data = await fetchQuestions();
-    setQuestions(data);
-    onQuestionsChange?.(data);
+  const loadQuestions = () => {
+    const allQuestions = JSON.parse(localStorage.getItem("questions") || "[]");
+    const testQuestions = allQuestions.filter((q: Question) => q.test_id === testId);
+    setQuestions(testQuestions);
+    onQuestionsChange?.(testQuestions);
   };
 
-  const handleAddQuestion = async () => {
+  const handleAddQuestion = () => {
     if (!currentQuestion.question_text?.trim()) {
       toast({ title: 'Error', description: 'Please enter question text', variant: 'destructive' });
       return;
@@ -66,6 +67,7 @@ export const QuestionBuilder = ({ testId, onQuestionsChange }: QuestionBuilderPr
     }
 
     const newQuestion: Question = {
+      id: crypto.randomUUID(),
       test_id: testId,
       question_type: currentQuestion.question_type as any,
       difficulty: currentQuestion.difficulty as any,
@@ -82,17 +84,23 @@ export const QuestionBuilder = ({ testId, onQuestionsChange }: QuestionBuilderPr
       media_type: currentQuestion.media_type,
     };
 
-    const saved = await createQuestion(newQuestion);
-    if (saved) {
-      await loadQuestions();
-      resetForm();
-    }
+    // Save to localStorage
+    const allQuestions = JSON.parse(localStorage.getItem("questions") || "[]");
+    allQuestions.push(newQuestion);
+    localStorage.setItem("questions", JSON.stringify(allQuestions));
+
+    toast({ title: 'Success', description: 'Question created successfully' });
+    loadQuestions();
+    resetForm();
   };
 
-  const handleDeleteQuestion = async (id: string) => {
+  const handleDeleteQuestion = (id: string) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
-      await deleteQuestion(id);
-      await loadQuestions();
+      const allQuestions = JSON.parse(localStorage.getItem("questions") || "[]");
+      const filtered = allQuestions.filter((q: Question) => q.id !== id);
+      localStorage.setItem("questions", JSON.stringify(filtered));
+      toast({ title: 'Success', description: 'Question deleted successfully' });
+      loadQuestions();
     }
   };
 
@@ -132,10 +140,20 @@ export const QuestionBuilder = ({ testId, onQuestionsChange }: QuestionBuilderPr
     setDraggedIndex(index);
   };
 
-  const handleDragEnd = async () => {
+  const handleDragEnd = () => {
     if (draggedIndex !== null) {
-      const ids = questions.map(q => q.id!);
-      await reorderQuestions(ids);
+      // Update order_index for all questions
+      const allQuestions = JSON.parse(localStorage.getItem("questions") || "[]");
+      const updatedQuestions = questions.map((q, idx) => ({
+        ...q,
+        order_index: idx
+      }));
+      
+      // Replace test questions with updated order
+      const otherQuestions = allQuestions.filter((q: Question) => q.test_id !== testId);
+      localStorage.setItem("questions", JSON.stringify([...otherQuestions, ...updatedQuestions]));
+      
+      toast({ title: 'Success', description: 'Questions reordered successfully' });
     }
     setDraggedIndex(null);
   };

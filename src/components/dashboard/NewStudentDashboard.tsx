@@ -354,7 +354,7 @@ const NewStudentDashboard = () => {
             </Card>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div className="grid grid-cols-2 gap-4 mb-10">
               <Card className="cloud-bubble p-5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -369,35 +369,11 @@ const NewStudentDashboard = () => {
 
               <Card className="cloud-bubble p-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle className="h-5 w-5 text-success" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Correct</p>
-                    <p className="text-2xl font-bold text-success">{totalCorrect}</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="cloud-bubble p-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                    <XCircle className="h-5 w-5 text-destructive" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Wrong</p>
-                    <p className="text-2xl font-bold text-destructive">{totalWrong}</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="cloud-bubble p-5">
-                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
                     <TrendingUp className="h-5 w-5 text-secondary" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Avg Score</p>
+                    <p className="text-xs text-muted-foreground">Average Score</p>
                     <p className="text-2xl font-bold">{avgScore}%</p>
                   </div>
                 </div>

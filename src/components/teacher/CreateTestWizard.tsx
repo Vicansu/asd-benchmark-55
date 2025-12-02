@@ -49,75 +49,67 @@ export const CreateTestWizard = ({ teacherId, onComplete, onCancel }: CreateTest
     return code;
   };
 
-  const handleBasicInfoNext = async () => {
+  const handleBasicInfoNext = () => {
     if (!basicInfo.title || !basicInfo.subject) {
       toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
       return;
     }
 
-    try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' });
-        return;
-      }
-
-      // Generate test code
-      const testCode = generateTestCode(basicInfo.subject);
-
-      // Create test in database
-      const { data, error } = await supabase
-        .from('tests')
-        .insert([{
-          title: basicInfo.title,
-          subject: basicInfo.subject.toLowerCase(),
-          duration_minutes: basicInfo.duration_minutes,
-          test_code: testCode,
-          created_by: user.id,
-          is_active: true,
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setTestId(data.id);
-      toast({ title: 'Success', description: 'Test created! Now add questions.' });
-      setActiveTab('questions');
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    if (!teacherId) {
+      toast({ title: 'Error', description: 'Teacher not found', variant: 'destructive' });
+      return;
     }
+
+    // Generate test code
+    const testCode = generateTestCode(basicInfo.subject);
+    const newTestId = crypto.randomUUID();
+    
+    // Save to localStorage
+    const newTest = {
+      id: newTestId,
+      testCode,
+      title: basicInfo.title,
+      subject: basicInfo.subject,
+      duration_minutes: basicInfo.duration_minutes,
+      teacherId: teacherId,
+      createdAt: new Date().toISOString(),
+      is_active: true,
+    };
+    
+    const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+    allTests.push(newTest);
+    localStorage.setItem("tests", JSON.stringify(allTests));
+    
+    setTestId(newTestId);
+    toast({ title: 'Success', description: 'Test created! Now add questions.' });
+    setActiveTab('questions');
   };
 
-  const handleFinalize = async () => {
+  const handleFinalize = () => {
     if (!testId) return;
 
-    try {
-      // Update test with PDF info
-      const { error } = await supabase
-        .from('tests')
-        .update(pdfInfo)
-        .eq('id', testId);
-
-      if (error) throw error;
-
-      // Get test code
-      const { data } = await supabase
-        .from('tests')
-        .select('test_code')
-        .eq('id', testId)
-        .single();
+    // Update test with PDF info in localStorage
+    const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+    const testIndex = allTests.findIndex((t: any) => t.id === testId);
+    
+    if (testIndex !== -1) {
+      allTests[testIndex] = {
+        ...allTests[testIndex],
+        ...pdfInfo,
+      };
+      localStorage.setItem("tests", JSON.stringify(allTests));
+      
+      const testCode = allTests[testIndex].testCode;
 
       toast({
         title: 'Test Created Successfully!',
-        description: `Test code: ${data?.test_code}`,
+        description: `Test code: ${testCode}`,
         duration: 5000,
       });
 
-      onComplete?.(data?.test_code || '');
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      onComplete?.(testCode);
+    } else {
+      toast({ title: 'Error', description: 'Test not found', variant: 'destructive' });
     }
   };
 
