@@ -265,7 +265,7 @@ const LoginPage = () => {
                 id="student-id" 
                 placeholder="Enter student ID" 
                 value={studentForm.studentId}
-                onChange={(e) => setStudentForm({...studentForm, studentId: e.target.value})} 
+                onChange={(e) => setStudentForm(prev => ({...prev, studentId: e.target.value}))} 
                 className="input-glassy" 
                 maxLength={50}
               />
@@ -276,7 +276,7 @@ const LoginPage = () => {
               <PasswordInput
                 id="student-password"
                 value={studentForm.password}
-                onChange={(e) => setStudentForm({...studentForm, password: e.target.value})}
+                onChange={(e) => setStudentForm(prev => ({...prev, password: e.target.value}))}
                 placeholder="Enter password"
               />
             </div>
@@ -289,7 +289,7 @@ const LoginPage = () => {
                     id="fullName" 
                     placeholder="Enter full name" 
                     value={studentForm.fullName}
-                    onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} 
+                    onChange={(e) => setStudentForm(prev => ({...prev, fullName: e.target.value}))} 
                     className="input-glassy" 
                     maxLength={50}
                   />
@@ -302,7 +302,7 @@ const LoginPage = () => {
                       id="grade" 
                       placeholder="e.g., 10" 
                       value={studentForm.grade}
-                      onChange={(e) => setStudentForm({...studentForm, grade: e.target.value})} 
+                      onChange={(e) => setStudentForm(prev => ({...prev, grade: e.target.value}))} 
                       className="input-glassy" 
                     />
                   </div>
@@ -313,7 +313,7 @@ const LoginPage = () => {
                       id="class" 
                       placeholder="e.g., A" 
                       value={studentForm.class}
-                      onChange={(e) => setStudentForm({...studentForm, class: e.target.value})} 
+                      onChange={(e) => setStudentForm(prev => ({...prev, class: e.target.value}))} 
                       className="input-glassy" 
                     />
                   </div>
@@ -324,7 +324,7 @@ const LoginPage = () => {
                     <Label>Gender</Label>
                     <Select 
                       value={studentForm.gender} 
-                      onValueChange={(value) => setStudentForm({...studentForm, gender: value})}
+                      onValueChange={(value) => setStudentForm(prev => ({...prev, gender: value}))}
                     >
                       <SelectTrigger className="input-glassy">
                         <SelectValue placeholder="Select" />
@@ -343,7 +343,7 @@ const LoginPage = () => {
                       type="number" 
                       placeholder="Age" 
                       value={studentForm.age}
-                      onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} 
+                      onChange={(e) => setStudentForm(prev => ({...prev, age: e.target.value}))} 
                       className="input-glassy"
                       min={5}
                       max={25}
@@ -374,7 +374,7 @@ const LoginPage = () => {
                     type={showAdminId ? "text" : "password"}
                     placeholder="Enter Admin ID to verify" 
                     value={teacherForm.adminId}
-                    onChange={(e) => setTeacherForm({...teacherForm, adminId: e.target.value})} 
+                    onChange={(e) => setTeacherForm(prev => ({...prev, adminId: e.target.value}))} 
                     className="input-glassy pr-12" 
                   />
                   <button
@@ -396,7 +396,7 @@ const LoginPage = () => {
                 type="email"
                 placeholder={isSignUp ? "Enter your email" : "Enter Email ID"} 
                 value={teacherForm.emailId}
-                onChange={(e) => setTeacherForm({...teacherForm, emailId: e.target.value})} 
+                onChange={(e) => setTeacherForm(prev => ({...prev, emailId: e.target.value}))} 
                 className="input-glassy" 
                 maxLength={100}
               />
@@ -407,7 +407,7 @@ const LoginPage = () => {
               <PasswordInput
                 id="teacher-password"
                 value={teacherForm.password}
-                onChange={(e) => setTeacherForm({...teacherForm, password: e.target.value})}
+                onChange={(e) => setTeacherForm(prev => ({...prev, password: e.target.value}))}
                 placeholder={isSignUp ? "Create your password" : "Enter your password"}
               />
             </div>
@@ -420,7 +420,7 @@ const LoginPage = () => {
                     id="teacher-name" 
                     placeholder="Enter your full name" 
                     value={teacherForm.fullName}
-                    onChange={(e) => setTeacherForm({...teacherForm, fullName: e.target.value})} 
+                    onChange={(e) => setTeacherForm(prev => ({...prev, fullName: e.target.value}))} 
                     className="input-glassy" 
                     maxLength={50}
                   />
@@ -430,7 +430,7 @@ const LoginPage = () => {
                   <Label>Subject</Label>
                   <Select 
                     value={teacherForm.subject} 
-                    onValueChange={(value) => setTeacherForm({...teacherForm, subject: value})}
+                    onValueChange={(value) => setTeacherForm(prev => ({...prev, subject: value}))}
                   >
                     <SelectTrigger className="input-glassy">
                       <SelectValue placeholder="Select subject" />

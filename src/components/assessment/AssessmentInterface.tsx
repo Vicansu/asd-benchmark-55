@@ -60,7 +60,7 @@ const AssessmentInterface = () => {
     }
   }, [testData]);
 
-  const initializeTest = async () => {
+  const initializeTest = () => {
     try {
       const studentDataStr = localStorage.getItem("studentData");
       const testDataStr = localStorage.getItem("currentTest");
@@ -76,29 +76,22 @@ const AssessmentInterface = () => {
 
       setStudentData(student);
       setTestData(test);
-
-      // Get test from database to get the actual test ID
-      const { data: testRecord } = await supabase
-        .from('tests')
-        .select('id')
-        .eq('test_code', test.testCode)
-        .single();
-
-      if (testRecord) {
-        setTestId(testRecord.id);
-      }
+      setTestId(test.id);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to load test", variant: "destructive" });
       navigate("/");
     }
   };
 
-  const loadPracticeQuestions = async () => {
+  const loadPracticeQuestions = () => {
     setLoading(true);
     try {
-      const practiceQs = await fetchQuestions('practice');
+      const allQuestions = JSON.parse(localStorage.getItem("questions") || "[]");
+      const practiceQs = allQuestions
+        .filter((q: Question) => q.test_id === testId && q.difficulty === 'practice')
+        .sort((a: Question, b: Question) => (a.order_index || 0) - (b.order_index || 0));
       
-      if (practiceQs && practiceQs.length > 0) {
+      if (practiceQs.length > 0) {
         setQuestions(practiceQs);
         setLoading(false);
       } else {
@@ -106,10 +99,10 @@ const AssessmentInterface = () => {
         toast({ title: "Notice", description: "No practice questions found. Starting main test." });
         setPracticeComplete(true);
         setAssignedLevel('medium'); // Default to medium if no practice
-        await loadMainQuestions('medium');
+        loadMainQuestions('medium');
       }
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to load questions", variant: "destructive" });
       setLoading(false);
     }
   };
@@ -152,17 +145,20 @@ const AssessmentInterface = () => {
     setSelectedAnswer("");
     setMarkedForReview(new Set());
 
-    await loadMainQuestions(level);
+    loadMainQuestions(level);
   };
 
-  const loadMainQuestions = async (level: string) => {
+  const loadMainQuestions = (level: string) => {
     setLoading(true);
     try {
-      const mainQs = await fetchQuestions(level);
+      const allQuestions = JSON.parse(localStorage.getItem("questions") || "[]");
+      const mainQs = allQuestions
+        .filter((q: Question) => q.test_id === testId && q.difficulty === level)
+        .sort((a: Question, b: Question) => (a.order_index || 0) - (b.order_index || 0));
       setQuestions(mainQs);
       setLoading(false);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to load questions", variant: "destructive" });
       setLoading(false);
     }
   };
@@ -184,10 +180,10 @@ const AssessmentInterface = () => {
       if (!practiceComplete) {
         // Complete practice and assign difficulty
         const score = calculatePracticeScore();
-        await assignDifficultyLevel(score);
+        assignDifficultyLevel(score);
       } else {
         // Submit main test
-        await handleSubmit();
+        handleSubmit();
       }
     }
   };
@@ -199,11 +195,11 @@ const AssessmentInterface = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!practiceComplete) {
       // This is practice submission
       const score = calculatePracticeScore();
-      await assignDifficultyLevel(score);
+      assignDifficultyLevel(score);
       return;
     }
 
@@ -220,26 +216,7 @@ const AssessmentInterface = () => {
 
     const finalScore = Math.round((correctAnswers / questions.length) * 100);
 
-    // Save to Supabase
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user && testId) {
-        await supabase.from('test_results').insert([{
-          test_id: testId,
-          student_id: user.id,
-          score: finalScore,
-          answers: answers,
-          difficulty_level: assignedLevel,
-          time_spent_seconds: timeSpent,
-          marked_for_review: Array.from(markedForReview),
-        }]);
-      }
-    } catch (error) {
-      console.error('Error saving results:', error);
-    }
-
-    // Also save to localStorage for backwards compatibility
+    // Save to localStorage
     const result = {
       studentId: studentData?.studentId,
       testCode: testData?.testCode,
