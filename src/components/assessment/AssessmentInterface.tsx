@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Clock, BookOpen, ChevronLeft, ChevronRight, Flag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -425,23 +425,6 @@ const AssessmentInterface = () => {
                   </>
                 )}
 
-                {currentQuestion.question_type === 'short-answer' && (
-                  <Textarea
-                    value={selectedAnswer}
-                    onChange={(e) => handleAnswerSelect(e.target.value)}
-                    placeholder="Type your answer here..."
-                    className="input-glassy min-h-[100px]"
-                  />
-                )}
-
-                {currentQuestion.question_type === 'long-answer' && (
-                  <Textarea
-                    value={selectedAnswer}
-                    onChange={(e) => handleAnswerSelect(e.target.value)}
-                    placeholder="Write your detailed answer here..."
-                    className="input-glassy min-h-[200px]"
-                  />
-                )}
               </div>
             </div>
 

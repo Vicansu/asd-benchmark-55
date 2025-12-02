@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface Question {
   id?: string;
   test_id: string;
-  question_type: 'mcq' | 'short-answer' | 'long-answer';
+  question_type: 'mcq';
   difficulty: 'practice' | 'easy' | 'medium' | 'hard';
   passage_id?: string;
   passage_text?: string;

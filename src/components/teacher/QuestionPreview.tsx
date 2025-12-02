@@ -87,26 +87,6 @@ export const QuestionPreview = ({ question, questionNumber }: QuestionPreviewPro
         </div>
       )}
 
-      {question.question_type === 'short-answer' && (
-        <div className="p-4 bg-muted/30 rounded-xl border-2 border-dashed border-border">
-          <p className="text-sm text-muted-foreground italic">
-            Student will type a short answer here...
-          </p>
-          {question.correct_answer && (
-            <p className="text-xs text-success mt-2">
-              Expected answer: {question.correct_answer}
-            </p>
-          )}
-        </div>
-      )}
-
-      {question.question_type === 'long-answer' && (
-        <div className="p-4 bg-muted/30 rounded-xl border-2 border-dashed border-border min-h-[120px]">
-          <p className="text-sm text-muted-foreground italic">
-            Student will write a detailed answer here...
-          </p>
-        </div>
-      )}
     </Card>
   );
 };
