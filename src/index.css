@@ -219,11 +219,11 @@
      NAVIGATION BUBBLE (Large clickable bubbles)
      ============================================ */
   .nav-bubble {
-    @apply bg-card rounded-[2.5rem] p-8 shadow-bubble border border-white/50
+    @apply bg-card rounded-[2rem] p-6 shadow-cloud border border-white/50
            transition-all duration-300 cursor-pointer
-           hover:shadow-bubble-hover hover:scale-[1.02] hover:-translate-y-1
-           flex flex-col items-center justify-center gap-4 text-center
-           min-h-[180px];
+           hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1
+           flex flex-col items-center justify-center gap-3 text-center
+           min-h-[160px];
   }
 
   .nav-bubble:active {
@@ -231,7 +231,7 @@
   }
 
   .nav-bubble-icon {
-    @apply w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center
+    @apply w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center
            transition-all duration-300;
   }
 
@@ -244,12 +244,12 @@
      ============================================ */
   .passage-bubble {
     background: linear-gradient(180deg, hsl(var(--bubble-passage)), hsl(var(--card)));
-    @apply rounded-[1.75rem] shadow-md p-8 
-           border border-border/30 h-full overflow-y-auto;
+    @apply rounded-[1.5rem] shadow-md p-6 
+           border border-border/30;
   }
 
   .question-bubble {
-    @apply bg-bubble-question rounded-[1.75rem] shadow-md p-6 
+    @apply bg-bubble-question rounded-[1.5rem] shadow-md p-5 
            border border-border/30;
   }
 
