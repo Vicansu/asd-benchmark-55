@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy, PlusCircle, FolderOpen, ChartLine, ArrowLeft } from "lucide-react";
+import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy, PlusCircle, FolderOpen, ChartLine, ArrowLeft, Trash2, Edit, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { CreateTestWizard } from "@/components/teacher/CreateTestWizard";
@@ -19,6 +19,8 @@ const NewTeacherDashboard = () => {
   const [tests, setTests] = useState<any[]>([]);
   const [allResults, setAllResults] = useState<any[]>([]);
   const [activeSection, setActiveSection] = useState<ActiveSection>("home");
+  const [editingTestId, setEditingTestId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', subject: '', duration_minutes: 60 });
   
   // Upload form
   const [testTitle, setTestTitle] = useState("");
@@ -99,6 +101,57 @@ const NewTeacherDashboard = () => {
   const copyTestCode = (code: string) => {
     navigator.clipboard.writeText(code);
     toast({ title: "Copied!", description: "Test code copied to clipboard" });
+  };
+
+  const handleDeleteTest = (testId: string) => {
+    if (!window.confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
+      return;
+    }
+
+    const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+    const filtered = allTests.filter((t: any) => t.id !== testId);
+    localStorage.setItem("tests", JSON.stringify(filtered));
+
+    // Also delete associated questions
+    const allQuestions = JSON.parse(localStorage.getItem("questions") || "[]");
+    const filteredQuestions = allQuestions.filter((q: any) => q.test_id !== testId);
+    localStorage.setItem("questions", JSON.stringify(filteredQuestions));
+
+    setTests(filtered.filter((t: any) => t.teacherId === teacher.teacherId));
+    toast({ title: "Test Deleted", description: "Test and all its questions have been deleted" });
+  };
+
+  const handleEditTest = (test: any) => {
+    setEditingTestId(test.id);
+    setEditForm({
+      title: test.title,
+      subject: test.subject,
+      duration_minutes: test.duration_minutes || 60
+    });
+  };
+
+  const handleSaveEdit = (testId: string) => {
+    const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+    const testIndex = allTests.findIndex((t: any) => t.id === testId);
+    
+    if (testIndex !== -1) {
+      allTests[testIndex] = {
+        ...allTests[testIndex],
+        title: editForm.title,
+        subject: editForm.subject,
+        duration_minutes: editForm.duration_minutes
+      };
+      localStorage.setItem("tests", JSON.stringify(allTests));
+      
+      setTests(allTests.filter((t: any) => t.teacherId === teacher.teacherId));
+      toast({ title: "Test Updated", description: "Test details have been saved" });
+    }
+    
+    setEditingTestId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTestId(null);
   };
 
   if (!teacher) return null;
@@ -194,27 +247,109 @@ const NewTeacherDashboard = () => {
                 <p className="text-muted-foreground text-center py-12">No tests created yet. Click "Create Test" to get started!</p>
               ) : (
                 tests.map((test, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-5 bg-muted/30 rounded-2xl hover:bg-muted/50 transition-colors">
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground">{test.title}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {test.subject} • {test.durationMinutes} min • {new Date(test.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right mr-2">
-                        <p className="text-xl font-bold text-primary font-mono">{test.testCode}</p>
-                        <p className="text-xs text-muted-foreground">Test Code</p>
+                  <div key={idx} className="p-5 bg-muted/30 rounded-2xl hover:bg-muted/50 transition-colors">
+                    {editingTestId === test.id ? (
+                      // Edit Mode
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Test Title</Label>
+                          <Input
+                            value={editForm.title}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                            className="input-glassy"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs">Subject</Label>
+                            <Select
+                              value={editForm.subject}
+                              onValueChange={(v) => setEditForm(prev => ({ ...prev, subject: v }))}
+                            >
+                              <SelectTrigger className="input-glassy">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="English">English</SelectItem>
+                                <SelectItem value="Science">Science</SelectItem>
+                                <SelectItem value="Mathematics">Mathematics</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Duration (minutes)</Label>
+                            <Input
+                              type="number"
+                              value={editForm.duration_minutes}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 60 }))}
+                              min={10}
+                              max={300}
+                              className="input-glassy"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleSaveEdit(test.id)}
+                            className="flex-1 bg-success text-success-foreground hover:bg-success/90"
+                          >
+                            <Save className="h-4 w-4 mr-2" />
+                            Save
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={handleCancelEdit}
+                            className="rounded-xl"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => copyTestCode(test.testCode)}
-                        className="rounded-xl"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    ) : (
+                      // View Mode
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">{test.title}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {test.subject} • {test.duration_minutes || test.durationMinutes || 60} min • {new Date(test.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right mr-2">
+                            <p className="text-xl font-bold text-primary font-mono">{test.testCode}</p>
+                            <p className="text-xs text-muted-foreground">Test Code</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => copyTestCode(test.testCode)}
+                            className="rounded-xl"
+                            title="Copy test code"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleEditTest(test)}
+                            className="rounded-xl"
+                            title="Edit test"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleDeleteTest(test.id)}
+                            className="rounded-xl"
+                            title="Delete test"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
