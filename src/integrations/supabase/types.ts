@@ -59,6 +59,71 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          correct_answer: string | null
+          created_at: string | null
+          difficulty: string
+          id: string
+          marks: number | null
+          media_type: string | null
+          media_url: string | null
+          options: Json | null
+          order_index: number | null
+          passage_id: string | null
+          passage_text: string | null
+          passage_title: string | null
+          question_text: string
+          question_type: string
+          sub_question_label: string | null
+          test_id: string
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string | null
+          difficulty: string
+          id?: string
+          marks?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          options?: Json | null
+          order_index?: number | null
+          passage_id?: string | null
+          passage_text?: string | null
+          passage_title?: string | null
+          question_text: string
+          question_type: string
+          sub_question_label?: string | null
+          test_id: string
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string | null
+          difficulty?: string
+          id?: string
+          marks?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          options?: Json | null
+          order_index?: number | null
+          passage_id?: string | null
+          passage_text?: string | null
+          passage_title?: string | null
+          question_text?: string
+          question_type?: string
+          sub_question_label?: string | null
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_results: {
         Row: {
           answers: Json | null
@@ -108,9 +173,17 @@ export type Database = {
           created_at: string
           created_by: string
           duration_minutes: number | null
+          easy_pdf_url: string | null
+          easy_question_count: number | null
+          hard_pdf_url: string | null
+          hard_question_count: number | null
           id: string
           is_active: boolean | null
+          medium_pdf_url: string | null
+          medium_question_count: number | null
           pdf_url: string | null
+          practice_pdf_url: string | null
+          practice_question_count: number | null
           subject: string
           test_code: string
           title: string
@@ -120,9 +193,17 @@ export type Database = {
           created_at?: string
           created_by: string
           duration_minutes?: number | null
+          easy_pdf_url?: string | null
+          easy_question_count?: number | null
+          hard_pdf_url?: string | null
+          hard_question_count?: number | null
           id?: string
           is_active?: boolean | null
+          medium_pdf_url?: string | null
+          medium_question_count?: number | null
           pdf_url?: string | null
+          practice_pdf_url?: string | null
+          practice_question_count?: number | null
           subject: string
           test_code: string
           title: string
@@ -132,9 +213,17 @@ export type Database = {
           created_at?: string
           created_by?: string
           duration_minutes?: number | null
+          easy_pdf_url?: string | null
+          easy_question_count?: number | null
+          hard_pdf_url?: string | null
+          hard_question_count?: number | null
           id?: string
           is_active?: boolean | null
+          medium_pdf_url?: string | null
+          medium_question_count?: number | null
           pdf_url?: string | null
+          practice_pdf_url?: string | null
+          practice_question_count?: number | null
           subject?: string
           test_code?: string
           title?: string

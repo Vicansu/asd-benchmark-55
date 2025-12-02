@@ -183,7 +183,7 @@ const LoginPage = () => {
   }: { 
     id: string; 
     value: string; 
-    onChange: (value: string) => void; 
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; 
     placeholder: string;
   }) => (
     <div className="relative">
@@ -192,7 +192,7 @@ const LoginPage = () => {
         type={showPassword ? "text" : "password"} 
         placeholder={placeholder} 
         value={value}
-        onChange={(e) => onChange(e.target.value)} 
+        onChange={onChange}
         className="input-glassy pr-12" 
       />
       <button
@@ -276,7 +276,7 @@ const LoginPage = () => {
               <PasswordInput
                 id="student-password"
                 value={studentForm.password}
-                onChange={(value) => setStudentForm({...studentForm, password: value})}
+                onChange={(e) => setStudentForm({...studentForm, password: e.target.value})}
                 placeholder="Enter password"
               />
             </div>
@@ -407,7 +407,7 @@ const LoginPage = () => {
               <PasswordInput
                 id="teacher-password"
                 value={teacherForm.password}
-                onChange={(value) => setTeacherForm({...teacherForm, password: value})}
+                onChange={(e) => setTeacherForm({...teacherForm, password: e.target.value})}
                 placeholder={isSignUp ? "Create your password" : "Enter your password"}
               />
             </div>
