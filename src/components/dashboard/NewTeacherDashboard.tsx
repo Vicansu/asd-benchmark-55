@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy, PlusCircle, FolderOpen, ChartLine, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { CreateTestWizard } from "@/components/teacher/CreateTestWizard";
 
 type ActiveSection = "home" | "create" | "tests" | "analytics" | "students";
 
@@ -161,51 +162,26 @@ const NewTeacherDashboard = () => {
     switch (activeSection) {
       case "create":
         return (
-          <Card className="cloud-bubble p-8 max-w-xl mx-auto animate-fade-in">
-            <h3 className="text-xl font-semibold mb-2">Create New Test</h3>
-            <p className="text-muted-foreground text-sm mb-6">Fill in the details to generate a test code</p>
-            <form onSubmit={handleCreateTest} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="testTitle">Test Title</Label>
-                <Input
-                  id="testTitle"
-                  placeholder="e.g., Midterm Assessment"
-                  value={testTitle}
-                  onChange={(e) => setTestTitle(e.target.value)}
-                  className="input-glassy"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Subject</Label>
-                <Select value={testSubject} onValueChange={setTestSubject}>
-                  <SelectTrigger className="input-glassy">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="English">English</SelectItem>
-                    <SelectItem value="Science">Science</SelectItem>
-                    <SelectItem value="Mathematics">Mathematics</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration (minutes)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  value={testDuration}
-                  onChange={(e) => setTestDuration(e.target.value)}
-                  className="input-glassy"
-                />
-              </div>
-
-              <Button type="submit" className="w-full nav-btn-next">
-                Create Test
-              </Button>
-            </form>
-          </Card>
+          <CreateTestWizard
+            teacherId={teacher.teacherId}
+            onComplete={(testCode) => {
+              const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+              const newTest = {
+                testCode,
+                subject: 'General',
+                title: 'New Test',
+                durationMinutes: 60,
+                teacherId: teacher.teacherId,
+                teacherName: teacher.fullName,
+                createdAt: new Date().toISOString()
+              };
+              allTests.push(newTest);
+              localStorage.setItem("tests", JSON.stringify(allTests));
+              setTests([...tests, newTest]);
+              setActiveSection("tests");
+            }}
+            onCancel={() => setActiveSection("home")}
+          />
         );
 
       case "tests":
