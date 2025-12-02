@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, UserCircle, ShieldCheck, ArrowLeft } from "lucide-react";
+import { GraduationCap, UserCircle, ShieldCheck, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ADMIN_ID = "Amb@ssador#Bench!2025";
@@ -16,28 +15,24 @@ const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
-  const defaultRole = searchParams.get("role") || "student";
-  const [activeTab, setActiveTab] = useState(defaultRole);
+  const role = searchParams.get("role") || "student";
   const [isSignUp, setIsSignUp] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showAdminId, setShowAdminId] = useState(false);
   
   const [studentForm, setStudentForm] = useState({
     studentId: "", password: "", fullName: "", grade: "", class: "", gender: "", age: ""
   });
 
   const [teacherForm, setTeacherForm] = useState({
-    adminId: "", teacherId: "", password: "", fullName: "", subject: ""
+    adminId: "", emailId: "", password: "", fullName: "", subject: ""
   });
 
-  useEffect(() => {
-    if (searchParams.get("role")) {
-      setActiveTab(searchParams.get("role") || "student");
-    }
-  }, [searchParams]);
-
   // Validation helpers
-  const validateStudentId = (id: string) => id.trim().length >= 3 && id.trim().length <= 20;
+  const validateId = (id: string) => id.trim().length >= 3 && id.trim().length <= 50;
   const validatePassword = (pass: string) => pass.length >= 4;
   const validateName = (name: string) => name.trim().length >= 2 && name.trim().length <= 50;
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleStudentAuth = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,8 +44,8 @@ const LoginPage = () => {
         return;
       }
 
-      if (!validateStudentId(studentForm.studentId)) {
-        toast({ title: "Invalid Student ID", description: "Student ID must be 3-20 characters", variant: "destructive" });
+      if (!validateId(studentForm.studentId)) {
+        toast({ title: "Invalid Student ID", description: "Student ID must be 3-50 characters", variant: "destructive" });
         return;
       }
 
@@ -111,7 +106,7 @@ const LoginPage = () => {
     e.preventDefault();
     
     if (isSignUp) {
-      if (!teacherForm.adminId || !teacherForm.teacherId || !teacherForm.password || 
+      if (!teacherForm.adminId || !teacherForm.emailId || !teacherForm.password || 
           !teacherForm.fullName || !teacherForm.subject) {
         toast({ title: "Missing Information", description: "Please fill in all fields", variant: "destructive" });
         return;
@@ -122,8 +117,8 @@ const LoginPage = () => {
         return;
       }
 
-      if (!validateStudentId(teacherForm.teacherId)) {
-        toast({ title: "Invalid Teacher ID", description: "Teacher ID must be 3-20 characters", variant: "destructive" });
+      if (!validateEmail(teacherForm.emailId)) {
+        toast({ title: "Invalid Email", description: "Please enter a valid email address", variant: "destructive" });
         return;
       }
 
@@ -138,13 +133,14 @@ const LoginPage = () => {
       }
       
       const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
-      if (teachers.find((t: any) => t.teacherId === teacherForm.teacherId.trim())) {
-        toast({ title: "Error", description: "Teacher ID already exists", variant: "destructive" });
+      if (teachers.find((t: any) => t.emailId === teacherForm.emailId.trim().toLowerCase())) {
+        toast({ title: "Error", description: "Email already registered", variant: "destructive" });
         return;
       }
       
       const newTeacher = {
-        teacherId: teacherForm.teacherId.trim(),
+        teacherId: teacherForm.emailId.trim().toLowerCase(),
+        emailId: teacherForm.emailId.trim().toLowerCase(),
         password: teacherForm.password,
         fullName: teacherForm.fullName.trim(),
         subject: teacherForm.subject
@@ -152,22 +148,23 @@ const LoginPage = () => {
       
       teachers.push(newTeacher);
       localStorage.setItem("teachers", JSON.stringify(teachers));
-      toast({ title: "Success!", description: "Account created! Please login with your password." });
+      toast({ title: "Success!", description: "Account created! Please login with your email." });
       setIsSignUp(false);
-      setTeacherForm({ adminId: "", teacherId: "", password: "", fullName: "", subject: "" });
+      setTeacherForm({ adminId: "", emailId: "", password: "", fullName: "", subject: "" });
     } else {
-      if (!teacherForm.teacherId || !teacherForm.password) {
-        toast({ title: "Missing Information", description: "Please enter Teacher ID and password", variant: "destructive" });
+      if (!teacherForm.emailId || !teacherForm.password) {
+        toast({ title: "Missing Information", description: "Please enter Email and password", variant: "destructive" });
         return;
       }
       
       const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
       const teacher = teachers.find((t: any) => 
-        t.teacherId === teacherForm.teacherId.trim() && t.password === teacherForm.password
+        (t.emailId === teacherForm.emailId.trim().toLowerCase() || t.teacherId === teacherForm.emailId.trim().toLowerCase()) 
+        && t.password === teacherForm.password
       );
       
       if (!teacher) {
-        toast({ title: "Error", description: "Invalid Teacher ID or password", variant: "destructive" });
+        toast({ title: "Error", description: "Invalid Email or password", variant: "destructive" });
         return;
       }
       
@@ -177,6 +174,36 @@ const LoginPage = () => {
       navigate("/teacher/dashboard");
     }
   };
+
+  const PasswordInput = ({ 
+    id, 
+    value, 
+    onChange, 
+    placeholder 
+  }: { 
+    id: string; 
+    value: string; 
+    onChange: (value: string) => void; 
+    placeholder: string;
+  }) => (
+    <div className="relative">
+      <Input 
+        id={id} 
+        type={showPassword ? "text" : "password"} 
+        placeholder={placeholder} 
+        value={value}
+        onChange={(e) => onChange(e.target.value)} 
+        className="input-glassy pr-12" 
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+      </button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-primary/10 flex items-center justify-center p-4">
@@ -190,245 +217,239 @@ const LoginPage = () => {
           <span className="text-sm">Back to home</span>
         </button>
 
-        {/* Header */}
+        {/* Header with Role Icon */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">PISA Practice Platform</h1>
-          <p className="text-muted-foreground">Sign in to continue</p>
+          <div className="flex justify-center mb-4">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
+              role === "student" ? "bg-primary/10" : "bg-secondary/10"
+            }`}>
+              {role === "student" ? (
+                <GraduationCap className="h-10 w-10 text-primary" />
+              ) : (
+                <UserCircle className="h-10 w-10 text-secondary" />
+              )}
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {role === "student" ? "Student Portal" : "Teacher Portal"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isSignUp ? "Create your account" : "Sign in to continue"}
+          </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 rounded-2xl p-1 bg-muted/50">
-            <TabsTrigger value="student" className="flex items-center gap-2 rounded-xl">
-              <GraduationCap className="h-4 w-4" />Student
-            </TabsTrigger>
-            <TabsTrigger value="teacher" className="flex items-center gap-2 rounded-xl">
-              <UserCircle className="h-4 w-4" />Teacher
-            </TabsTrigger>
-          </TabsList>
+        {/* Sign Up / Login Toggle */}
+        <div className="mb-6 flex gap-2 justify-center">
+          <Button 
+            variant={isSignUp ? "default" : "outline"} 
+            onClick={() => setIsSignUp(true)}
+            className="flex-1 rounded-xl"
+          >
+            Sign Up
+          </Button>
+          <Button 
+            variant={!isSignUp ? "default" : "outline"} 
+            onClick={() => setIsSignUp(false)}
+            className="flex-1 rounded-xl"
+          >
+            Login
+          </Button>
+        </div>
 
-          {/* STUDENT TAB */}
-          <TabsContent value="student">
-            <div className="mb-6 flex gap-2 justify-center">
-              <Button 
-                variant={isSignUp ? "default" : "outline"} 
-                onClick={() => setIsSignUp(true)}
-                className="flex-1 rounded-xl"
-              >
-                Sign Up
-              </Button>
-              <Button 
-                variant={!isSignUp ? "default" : "outline"} 
-                onClick={() => setIsSignUp(false)}
-                className="flex-1 rounded-xl"
-              >
-                Login
-              </Button>
+        {/* STUDENT FORM */}
+        {role === "student" && (
+          <form onSubmit={handleStudentAuth} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="student-id">Student ID</Label>
+              <Input 
+                id="student-id" 
+                placeholder="Enter student ID" 
+                value={studentForm.studentId}
+                onChange={(e) => setStudentForm({...studentForm, studentId: e.target.value})} 
+                className="input-glassy" 
+                maxLength={50}
+              />
             </div>
 
-            <form onSubmit={handleStudentAuth} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="student-id">Student ID</Label>
-                <Input 
-                  id="student-id" 
-                  placeholder="Enter student ID" 
-                  value={studentForm.studentId}
-                  onChange={(e) => setStudentForm({...studentForm, studentId: e.target.value})} 
-                  className="input-glassy" 
-                  maxLength={20}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="student-password">Password</Label>
-                <Input 
-                  id="student-password" 
-                  type="password" 
-                  placeholder="Enter password" 
-                  value={studentForm.password}
-                  onChange={(e) => setStudentForm({...studentForm, password: e.target.value})} 
-                  className="input-glassy" 
-                />
-              </div>
-
-              {isSignUp && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input 
-                      id="fullName" 
-                      placeholder="Enter full name" 
-                      value={studentForm.fullName}
-                      onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} 
-                      className="input-glassy" 
-                      maxLength={50}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="grade">Grade</Label>
-                      <Input 
-                        id="grade" 
-                        placeholder="e.g., 10" 
-                        value={studentForm.grade}
-                        onChange={(e) => setStudentForm({...studentForm, grade: e.target.value})} 
-                        className="input-glassy" 
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="class">Class</Label>
-                      <Input 
-                        id="class" 
-                        placeholder="e.g., A" 
-                        value={studentForm.class}
-                        onChange={(e) => setStudentForm({...studentForm, class: e.target.value})} 
-                        className="input-glassy" 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Gender</Label>
-                      <Select 
-                        value={studentForm.gender} 
-                        onValueChange={(value) => setStudentForm({...studentForm, gender: value})}
-                      >
-                        <SelectTrigger className="input-glassy">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Male">Male</SelectItem>
-                          <SelectItem value="Female">Female</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="age">Age</Label>
-                      <Input 
-                        id="age" 
-                        type="number" 
-                        placeholder="Age" 
-                        value={studentForm.age}
-                        onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} 
-                        className="input-glassy"
-                        min={5}
-                        max={25}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <Button type="submit" className="w-full nav-btn-next mt-6">
-                {isSignUp ? "Sign Up" : "Login"}
-              </Button>
-            </form>
-          </TabsContent>
-
-          {/* TEACHER TAB */}
-          <TabsContent value="teacher">
-            <div className="mb-6 flex gap-2 justify-center">
-              <Button 
-                variant={isSignUp ? "default" : "outline"} 
-                onClick={() => setIsSignUp(true)}
-                className="flex-1 rounded-xl"
-              >
-                Sign Up
-              </Button>
-              <Button 
-                variant={!isSignUp ? "default" : "outline"} 
-                onClick={() => setIsSignUp(false)}
-                className="flex-1 rounded-xl"
-              >
-                Login
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="student-password">Password</Label>
+              <PasswordInput
+                id="student-password"
+                value={studentForm.password}
+                onChange={(value) => setStudentForm({...studentForm, password: value})}
+                placeholder="Enter password"
+              />
             </div>
 
-            <form onSubmit={handleTeacherAuth} className="space-y-4">
-              {isSignUp && (
+            {isSignUp && (
+              <>
                 <div className="space-y-2">
-                  <Label htmlFor="admin-id" className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    Admin ID
-                  </Label>
+                  <Label htmlFor="fullName">Full Name</Label>
                   <Input 
-                    id="admin-id" 
-                    type="password"
-                    placeholder="Enter Admin ID to verify" 
-                    value={teacherForm.adminId}
-                    onChange={(e) => setTeacherForm({...teacherForm, adminId: e.target.value})} 
+                    id="fullName" 
+                    placeholder="Enter full name" 
+                    value={studentForm.fullName}
+                    onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})} 
                     className="input-glassy" 
+                    maxLength={50}
                   />
-                  <p className="text-xs text-muted-foreground">Contact administrator for Admin ID</p>
                 </div>
-              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="teacher-id">Teacher ID</Label>
-                <Input 
-                  id="teacher-id" 
-                  placeholder={isSignUp ? "Create your Teacher ID" : "Enter Teacher ID"} 
-                  value={teacherForm.teacherId}
-                  onChange={(e) => setTeacherForm({...teacherForm, teacherId: e.target.value})} 
-                  className="input-glassy" 
-                  maxLength={20}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="teacher-password">Password</Label>
-                <Input 
-                  id="teacher-password" 
-                  type="password" 
-                  placeholder={isSignUp ? "Create your password" : "Enter your password"} 
-                  value={teacherForm.password}
-                  onChange={(e) => setTeacherForm({...teacherForm, password: e.target.value})} 
-                  className="input-glassy" 
-                />
-              </div>
-
-              {isSignUp && (
-                <>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="teacher-name">Full Name</Label>
+                    <Label htmlFor="grade">Grade</Label>
                     <Input 
-                      id="teacher-name" 
-                      placeholder="Enter your full name" 
-                      value={teacherForm.fullName}
-                      onChange={(e) => setTeacherForm({...teacherForm, fullName: e.target.value})} 
+                      id="grade" 
+                      placeholder="e.g., 10" 
+                      value={studentForm.grade}
+                      onChange={(e) => setStudentForm({...studentForm, grade: e.target.value})} 
                       className="input-glassy" 
-                      maxLength={50}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Subject</Label>
+                    <Label htmlFor="class">Class</Label>
+                    <Input 
+                      id="class" 
+                      placeholder="e.g., A" 
+                      value={studentForm.class}
+                      onChange={(e) => setStudentForm({...studentForm, class: e.target.value})} 
+                      className="input-glassy" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Gender</Label>
                     <Select 
-                      value={teacherForm.subject} 
-                      onValueChange={(value) => setTeacherForm({...teacherForm, subject: value})}
+                      value={studentForm.gender} 
+                      onValueChange={(value) => setStudentForm({...studentForm, gender: value})}
                     >
                       <SelectTrigger className="input-glassy">
-                        <SelectValue placeholder="Select subject" />
+                        <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Science">Science</SelectItem>
-                        <SelectItem value="Mathematics">Mathematics</SelectItem>
-                        <SelectItem value="English">English</SelectItem>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </>
-              )}
 
-              <Button type="submit" className="w-full nav-btn-next mt-6">
-                {isSignUp ? "Sign Up" : "Login"}
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Age</Label>
+                    <Input 
+                      id="age" 
+                      type="number" 
+                      placeholder="Age" 
+                      value={studentForm.age}
+                      onChange={(e) => setStudentForm({...studentForm, age: e.target.value})} 
+                      className="input-glassy"
+                      min={5}
+                      max={25}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Button type="submit" className="w-full nav-btn-next mt-6">
+              {isSignUp ? "Create Account" : "Login"}
+            </Button>
+          </form>
+        )}
+
+        {/* TEACHER FORM */}
+        {role === "teacher" && (
+          <form onSubmit={handleTeacherAuth} className="space-y-4">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-id" className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  Admin ID
+                </Label>
+                <div className="relative">
+                  <Input 
+                    id="admin-id" 
+                    type={showAdminId ? "text" : "password"}
+                    placeholder="Enter Admin ID to verify" 
+                    value={teacherForm.adminId}
+                    onChange={(e) => setTeacherForm({...teacherForm, adminId: e.target.value})} 
+                    className="input-glassy pr-12" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminId(!showAdminId)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showAdminId ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Contact administrator for Admin ID</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email-id">Email ID</Label>
+              <Input 
+                id="email-id" 
+                type="email"
+                placeholder={isSignUp ? "Enter your email" : "Enter Email ID"} 
+                value={teacherForm.emailId}
+                onChange={(e) => setTeacherForm({...teacherForm, emailId: e.target.value})} 
+                className="input-glassy" 
+                maxLength={100}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="teacher-password">Password</Label>
+              <PasswordInput
+                id="teacher-password"
+                value={teacherForm.password}
+                onChange={(value) => setTeacherForm({...teacherForm, password: value})}
+                placeholder={isSignUp ? "Create your password" : "Enter your password"}
+              />
+            </div>
+
+            {isSignUp && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="teacher-name">Full Name</Label>
+                  <Input 
+                    id="teacher-name" 
+                    placeholder="Enter your full name" 
+                    value={teacherForm.fullName}
+                    onChange={(e) => setTeacherForm({...teacherForm, fullName: e.target.value})} 
+                    className="input-glassy" 
+                    maxLength={50}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Subject</Label>
+                  <Select 
+                    value={teacherForm.subject} 
+                    onValueChange={(value) => setTeacherForm({...teacherForm, subject: value})}
+                  >
+                    <SelectTrigger className="input-glassy">
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Science">Science</SelectItem>
+                      <SelectItem value="Mathematics">Mathematics</SelectItem>
+                      <SelectItem value="English">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            <Button type="submit" className="w-full nav-btn-next mt-6">
+              {isSignUp ? "Create Account" : "Login"}
+            </Button>
+          </form>
+        )}
       </Card>
     </div>
   );

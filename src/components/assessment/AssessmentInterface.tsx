@@ -218,10 +218,11 @@ const AssessmentInterface = () => {
     setPracticeComplete(true);
     setCurrentQuestion(0);
     setSelectedAnswer("");
+    setAnswers({});
     
     toast({
       title: "Practice Complete!",
-      description: `Moving to ${level} difficulty questions`,
+      description: "Moving to the main assessment",
     });
   };
 
@@ -247,9 +248,12 @@ const AssessmentInterface = () => {
   const handleSubmit = () => {
     const questions = getCurrentQuestions();
     let correct = 0;
+    let wrong = 0;
     questions.forEach((q, idx) => {
       if (answers[idx] === q.correctAnswer) {
         correct++;
+      } else if (answers[idx]) {
+        wrong++;
       }
     });
     const score = Math.round((correct / questions.length) * 100);
@@ -262,6 +266,9 @@ const AssessmentInterface = () => {
       testTitle: currentTest.title || "Demo Test",
       subject: currentTest.subject || "General",
       score,
+      correctAnswers: correct,
+      wrongAnswers: wrong,
+      totalQuestions: questions.length,
       difficultyLevel: assignedLevel,
       timeSpent: 3600 - timeRemaining,
       completedAt: new Date().toISOString(),
@@ -302,23 +309,26 @@ const AssessmentInterface = () => {
     setMarkedForReview(newMarked);
   };
 
+  // Calculate current stats
+  const answeredCount = Object.keys(answers).length;
+
   if (!studentData) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-primary/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-primary/5 pb-8">
       {/* Top Cloud Bubble - Global Header */}
-      <div className="sticky top-4 z-50 mx-4 mt-4">
-        <div className="cloud-bubble-top px-6 py-4">
-          <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-50 px-4 pt-4 pb-2 bg-gradient-to-b from-background to-transparent">
+        <div className="cloud-bubble-top px-6 py-4 max-w-7xl mx-auto">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Left: Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md">
+              <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-md flex-shrink-0">
                 <span className="text-lg font-bold text-primary-foreground">P</span>
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <h2 className="font-semibold text-foreground">PISA Practice Platform</h2>
                 <p className="text-xs text-muted-foreground">
-                  {practiceComplete ? `${assignedLevel?.toUpperCase()} Level` : "Practice Round"}
+                  {practiceComplete ? "Main Assessment" : "Practice Round"}
                 </p>
               </div>
             </div>
@@ -330,7 +340,7 @@ const AssessmentInterface = () => {
             </div>
 
             {/* Right: Question Navigation Bubbles */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
               {questions.map((_, idx) => (
                 <button
                   key={idx}
@@ -354,14 +364,14 @@ const AssessmentInterface = () => {
       </div>
 
       {/* Main Content - Middle Cloud Bubble */}
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 pt-4 max-w-7xl">
         <div className="cloud-bubble-main p-6">
           {/* 60/40 Split Layout */}
-          <div className="grid lg:grid-cols-5 gap-8 min-h-[calc(100vh-220px)]">
+          <div className="grid lg:grid-cols-5 gap-6 min-h-[calc(100vh-200px)]">
             
             {/* Left Panel - Reading Passage (60%) */}
             <div className="lg:col-span-3">
-              <div className="passage-bubble h-full">
+              <div className="passage-bubble h-full max-h-[calc(100vh-240px)] overflow-y-auto">
                 <div className="mb-6 pb-4 border-b border-border/50">
                   <div className="flex items-center gap-3 mb-2">
                     <BookOpen className="h-5 w-5 text-primary" />
@@ -380,18 +390,16 @@ const AssessmentInterface = () => {
             </div>
 
             {/* Right Panel - Question & Answers (40%) */}
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              <div className="question-bubble flex-1">
+            <div className="lg:col-span-2 flex flex-col gap-4">
+              <div className="question-bubble flex-1 max-h-[calc(100vh-340px)] overflow-y-auto">
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-semibold text-primary bg-primary/10 px-4 py-1.5 rounded-full">
                       Question {currentQuestion + 1} of {questions.length}
                     </span>
-                    {practiceComplete && (
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {questions[currentQuestion].difficulty}
-                      </span>
-                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {answeredCount}/{questions.length} answered
+                    </span>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground leading-relaxed">
                     {questions[currentQuestion].question}
@@ -434,8 +442,8 @@ const AssessmentInterface = () => {
                 {markedForReview.has(currentQuestion) ? 'Marked for Review' : 'Mark for Review'}
               </Button>
 
-              {/* Navigation Buttons */}
-              <div className="flex gap-4">
+              {/* Navigation Buttons - Fixed at bottom */}
+              <div className="flex gap-4 pt-2">
                 <Button
                   onClick={handlePrevQuestion}
                   disabled={currentQuestion === 0}

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { BookOpen, TrendingUp, Award, LogOut, Code, ChartLine, History, User, ArrowLeft } from "lucide-react";
+import { BookOpen, TrendingUp, Award, LogOut, Code, ChartLine, History, User, ArrowLeft, CheckCircle, XCircle, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type ActiveSection = "home" | "performance" | "history" | "profile";
@@ -70,6 +70,10 @@ const NewStudentDashboard = () => {
 
   if (!student) return null;
 
+  // Calculate overall stats
+  const totalCorrect = testResults.reduce((sum, r) => sum + (r.correctAnswers || 0), 0);
+  const totalWrong = testResults.reduce((sum, r) => sum + (r.wrongAnswers || 0), 0);
+  const totalQuestions = testResults.reduce((sum, r) => sum + (r.totalQuestions || 0), 0);
   const avgScore = testResults.length > 0 
     ? (testResults.reduce((sum, r) => sum + (r.score || 0), 0) / testResults.length).toFixed(1)
     : 0;
@@ -87,14 +91,6 @@ const NewStudentDashboard = () => {
     }, {})
   ).map(([name, value]) => ({ name, value }));
 
-  const difficultyData = Object.entries(
-    testResults.reduce((acc: any, r) => {
-      const diff = r.difficultyLevel || 'Unknown';
-      acc[diff] = (acc[diff] || 0) + 1;
-      return acc;
-    }, {})
-  ).map(([name, value]) => ({ name, value }));
-
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))'];
 
   // Render section content
@@ -103,6 +99,54 @@ const NewStudentDashboard = () => {
       case "performance":
         return (
           <div className="space-y-6 animate-fade-in">
+            {/* Stats Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="stat-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                    <CheckCircle className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Correct</p>
+                    <p className="text-2xl font-bold text-success">{totalCorrect}</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="stat-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <XCircle className="h-5 w-5 text-destructive" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Wrong</p>
+                    <p className="text-2xl font-bold text-destructive">{totalWrong}</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="stat-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Target className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-2xl font-bold">{totalQuestions}</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="stat-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Average</p>
+                    <p className="text-2xl font-bold">{avgScore}%</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
             <Card className="cloud-bubble p-6">
               <h3 className="text-xl font-semibold mb-2">Score Trend</h3>
               <p className="text-muted-foreground text-sm mb-4">Your performance over time</p>
@@ -147,17 +191,26 @@ const NewStudentDashboard = () => {
               </Card>
 
               <Card className="cloud-bubble p-6">
-                <h3 className="text-lg font-semibold mb-4">Difficulty Levels</h3>
-                {difficultyData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={difficultyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <h3 className="text-lg font-semibold mb-4">Performance Summary</h3>
+                {testResults.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-4 bg-success/10 rounded-xl">
+                      <span className="text-sm font-medium">Accuracy Rate</span>
+                      <span className="text-lg font-bold text-success">
+                        {totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-primary/10 rounded-xl">
+                      <span className="text-sm font-medium">Tests Completed</span>
+                      <span className="text-lg font-bold text-primary">{testResults.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-secondary/10 rounded-xl">
+                      <span className="text-sm font-medium">Best Score</span>
+                      <span className="text-lg font-bold text-secondary">
+                        {testResults.length > 0 ? Math.max(...testResults.map(r => r.score || 0)) : 0}%
+                      </span>
+                    </div>
+                  </div>
                 ) : (
                   <p className="text-muted-foreground text-center py-8">No data yet</p>
                 )}
@@ -177,16 +230,20 @@ const NewStudentDashboard = () => {
               ) : (
                 testResults.map((result, idx) => (
                   <div key={idx} className="flex justify-between items-center p-5 bg-muted/30 rounded-2xl hover:bg-muted/50 transition-colors">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-semibold text-foreground">{result.testTitle || 'Assessment'}</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {new Date(result.completedAt).toLocaleDateString()} • {result.difficultyLevel || 'Standard'}
+                        {new Date(result.completedAt).toLocaleDateString()} • {result.subject || 'General'}
                       </p>
+                      <div className="flex gap-4 mt-2 text-xs">
+                        <span className="text-success">✓ {result.correctAnswers || 0} correct</span>
+                        <span className="text-destructive">✗ {result.wrongAnswers || 0} wrong</span>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-3xl font-bold text-primary">{result.score}%</p>
                       <p className="text-xs text-muted-foreground">
-                        {Math.floor(result.timeSpent / 60)} min
+                        {Math.floor((result.timeSpent || 0) / 60)} min
                       </p>
                     </div>
                   </div>
@@ -275,12 +332,12 @@ const NewStudentDashboard = () => {
             {/* Test Code Entry */}
             <Card className="cloud-bubble p-6 mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Code className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold mb-2">Enter Test Code</h3>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap sm:flex-nowrap">
                     <Input
                       placeholder="Enter 6-letter code (e.g., E1A2B3)"
                       value={testCode}
@@ -288,7 +345,7 @@ const NewStudentDashboard = () => {
                       className="input-glassy uppercase text-lg tracking-wider"
                       maxLength={6}
                     />
-                    <Button onClick={handleEnterTestCode} className="nav-btn-next px-8">
+                    <Button onClick={handleEnterTestCode} className="nav-btn-next px-8 whitespace-nowrap">
                       Start Test
                     </Button>
                   </div>
@@ -297,39 +354,51 @@ const NewStudentDashboard = () => {
             </Card>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
               <Card className="cloud-bubble p-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <BookOpen className="h-6 w-6 text-primary" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Tests Taken</p>
+                    <p className="text-xs text-muted-foreground">Tests Taken</p>
                     <p className="text-2xl font-bold">{testResults.length}</p>
                   </div>
                 </div>
               </Card>
 
               <Card className="cloud-bubble p-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6 text-secondary" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Average Score</p>
-                    <p className="text-2xl font-bold">{avgScore}%</p>
+                    <p className="text-xs text-muted-foreground">Correct</p>
+                    <p className="text-2xl font-bold text-success">{totalCorrect}</p>
                   </div>
                 </div>
               </Card>
 
               <Card className="cloud-bubble p-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
-                    <Award className="h-6 w-6 text-accent-foreground" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                    <XCircle className="h-5 w-5 text-destructive" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Subjects</p>
-                    <p className="text-2xl font-bold">All</p>
+                    <p className="text-xs text-muted-foreground">Wrong</p>
+                    <p className="text-2xl font-bold text-destructive">{totalWrong}</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="cloud-bubble p-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="h-5 w-5 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Avg Score</p>
+                    <p className="text-2xl font-bold">{avgScore}%</p>
                   </div>
                 </div>
               </Card>
