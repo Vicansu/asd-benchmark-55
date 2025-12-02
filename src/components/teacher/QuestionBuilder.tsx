@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { useQuestions, Question } from '@/hooks/useQuestions';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { QuestionPreview } from './QuestionPreview';
@@ -184,14 +184,7 @@ export const QuestionBuilder = ({ testId, onQuestionsChange }: QuestionBuilderPr
       <Card className="cloud-bubble p-6">
         <h3 className="text-xl font-semibold mb-4">Question Builder</h3>
         
-        <Tabs value={currentQuestion.question_type} onValueChange={(v) => setCurrentQuestion(prev => ({ ...prev, question_type: v as any }))}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="mcq">Multiple Choice</TabsTrigger>
-            <TabsTrigger value="short-answer">Short Answer</TabsTrigger>
-            <TabsTrigger value="long-answer">Long Answer</TabsTrigger>
-          </TabsList>
-
-          <div className="space-y-4">
+        <div className="space-y-4">
             {/* Difficulty */}
             <div className="space-y-2">
               <Label>Difficulty Level</Label>
@@ -294,19 +287,6 @@ export const QuestionBuilder = ({ testId, onQuestionsChange }: QuestionBuilderPr
               </div>
             )}
 
-            {/* Correct Answer for Short Answer */}
-            {currentQuestion.question_type === 'short-answer' && (
-              <div className="space-y-2">
-                <Label>Expected Answer (optional)</Label>
-                <Input
-                  value={currentQuestion.correct_answer || ''}
-                  onChange={(e) => setCurrentQuestion(prev => ({ ...prev, correct_answer: e.target.value }))}
-                  placeholder="Expected answer for reference"
-                  className="input-glassy"
-                />
-              </div>
-            )}
-
             {/* Marks */}
             <div className="space-y-2">
               <Label>Marks</Label>
@@ -357,7 +337,6 @@ export const QuestionBuilder = ({ testId, onQuestionsChange }: QuestionBuilderPr
               Add Question
             </Button>
           </div>
-        </Tabs>
       </Card>
 
       {/* Live Preview */}
