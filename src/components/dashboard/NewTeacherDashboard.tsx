@@ -9,8 +9,9 @@ import { Upload, Users, TrendingUp, BarChart3, LogOut, Copy, PlusCircle, FolderO
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { CreateTestWizard } from "@/components/teacher/CreateTestWizard";
+import { TestEditor } from "@/components/teacher/TestEditor";
 
-type ActiveSection = "home" | "create" | "tests" | "analytics" | "students";
+type ActiveSection = "home" | "create" | "tests" | "analytics" | "students" | "edit-test";
 
 const NewTeacherDashboard = () => {
   const navigate = useNavigate();
@@ -123,11 +124,7 @@ const NewTeacherDashboard = () => {
 
   const handleEditTest = (test: any) => {
     setEditingTestId(test.id);
-    setEditForm({
-      title: test.title,
-      subject: test.subject,
-      duration_minutes: test.duration_minutes || 60
-    });
+    setActiveSection("edit-test");
   };
 
   const handleSaveEdit = (testId: string) => {
@@ -213,24 +210,30 @@ const NewTeacherDashboard = () => {
   // Render section content
   const renderSection = () => {
     switch (activeSection) {
+      case "edit-test":
+        const testToEdit = tests.find(t => t.id === editingTestId);
+        if (!testToEdit) return null;
+        return (
+          <TestEditor
+            test={testToEdit}
+            onSave={(updatedTest) => {
+              const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
+              setTests(allTests.filter((t: any) => t.teacherId === teacher.teacherId));
+            }}
+            onClose={() => {
+              setEditingTestId(null);
+              setActiveSection("tests");
+            }}
+          />
+        );
+
       case "create":
         return (
           <CreateTestWizard
             teacherId={teacher.teacherId}
             onComplete={(testCode) => {
               const allTests = JSON.parse(localStorage.getItem("tests") || "[]");
-              const newTest = {
-                testCode,
-                subject: 'General',
-                title: 'New Test',
-                durationMinutes: 60,
-                teacherId: teacher.teacherId,
-                teacherName: teacher.fullName,
-                createdAt: new Date().toISOString()
-              };
-              allTests.push(newTest);
-              localStorage.setItem("tests", JSON.stringify(allTests));
-              setTests([...tests, newTest]);
+              setTests(allTests.filter((t: any) => t.teacherId === teacher.teacherId));
               setActiveSection("tests");
             }}
             onCancel={() => setActiveSection("home")}

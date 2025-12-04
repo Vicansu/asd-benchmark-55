@@ -6,10 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionBuilder } from './QuestionBuilder';
-import { PDFUploader } from './PDFUploader';
+import { PDFExtractor } from './PDFExtractor';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Sparkles, PenTool } from 'lucide-react';
 
 interface CreateTestWizardProps {
   teacherId: string;
@@ -132,8 +132,14 @@ export const CreateTestWizard = ({ teacherId, onComplete, onCancel }: CreateTest
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="questions" disabled={!testId}>Manual Questions</TabsTrigger>
-            <TabsTrigger value="pdfs" disabled={!testId}>PDF Upload</TabsTrigger>
+            <TabsTrigger value="questions" disabled={!testId}>
+              <PenTool className="h-3 w-3 mr-1" />
+              Manual
+            </TabsTrigger>
+            <TabsTrigger value="pdfs" disabled={!testId}>
+              <Sparkles className="h-3 w-3 mr-1" />
+              PDF Extract
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="basic" className="space-y-6 mt-6">
@@ -212,9 +218,11 @@ export const CreateTestWizard = ({ teacherId, onComplete, onCancel }: CreateTest
 
           <TabsContent value="pdfs" className="mt-6">
             {testId && (
-              <PDFUploader 
-                testId={testId} 
-                onPDFsChange={(updates) => setPdfInfo(prev => ({ ...prev, ...updates }))} 
+              <PDFExtractor 
+                testId={testId}
+                onSave={() => {
+                  toast({ title: 'Questions saved!', description: 'Questions have been added to the test.' });
+                }}
               />
             )}
             <div className="flex gap-4 mt-6">
