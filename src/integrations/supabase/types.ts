@@ -251,7 +251,71 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      questions_student_view: {
+        Row: {
+          correct_answer: string | null
+          created_at: string | null
+          difficulty: string | null
+          id: string | null
+          marks: number | null
+          media_type: string | null
+          media_url: string | null
+          options: Json | null
+          order_index: number | null
+          passage_id: string | null
+          passage_text: string | null
+          passage_title: string | null
+          question_text: string | null
+          question_type: string | null
+          sub_question_label: string | null
+          test_id: string | null
+        }
+        Insert: {
+          correct_answer?: never
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string | null
+          marks?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          options?: Json | null
+          order_index?: number | null
+          passage_id?: string | null
+          passage_text?: string | null
+          passage_title?: string | null
+          question_text?: string | null
+          question_type?: string | null
+          sub_question_label?: string | null
+          test_id?: string | null
+        }
+        Update: {
+          correct_answer?: never
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string | null
+          marks?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          options?: Json | null
+          order_index?: number | null
+          passage_id?: string | null
+          passage_text?: string | null
+          passage_title?: string | null
+          question_text?: string | null
+          question_type?: string | null
+          sub_question_label?: string | null
+          test_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       generate_test_code: { Args: { subject_param: string }; Returns: string }
@@ -262,6 +326,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_teacher_or_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "teacher" | "student"
